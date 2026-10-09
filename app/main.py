@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
-from app.routers import audit, chat, health, invoices, rules
+from app.routers import audit, chat, combination, health, invoices, ledger, rules
 
 logging.basicConfig(
     level=logging.INFO,
@@ -29,6 +29,8 @@ app.include_router(health.router, prefix="/api")
 app.include_router(invoices.router, prefix="/api")
 app.include_router(rules.router, prefix="/api")
 app.include_router(audit.router, prefix="/api")
+app.include_router(combination.router, prefix="/api")
+app.include_router(ledger.router, prefix="/api")
 app.include_router(chat.router, prefix="/api")
 
 if settings.web_dir.exists():

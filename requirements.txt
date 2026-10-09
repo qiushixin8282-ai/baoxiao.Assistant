@@ -11,6 +11,9 @@ openai==1.59.6
 PyMuPDF==1.25.1
 pillow==11.1.0
 
+# 台账导出 XLSX（可选，未安装时仍可导出 CSV/HTML）
+openpyxl==3.1.5
+
 # 可选：本地 OCR。如需识别图片发票再安装（体积较大，建议按需）
 # paddleocr==3.3.2
 # paddlepaddle==3.1.0

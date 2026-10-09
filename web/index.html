@@ -87,6 +87,8 @@
 <nav>
   <button class="active" data-tab="invoice">发票识别</button>
   <button data-tab="audit">智能审核</button>
+  <button data-tab="list">发票清单</button>
+  <button data-tab="combine">报销组合</button>
   <button data-tab="rules">报销规则</button>
   <button data-tab="chat">智能问答</button>
 </nav>
@@ -126,6 +128,42 @@
     </div>
   </section>
 
+  <!-- 发票清单 -->
+  <section id="tab-list" class="panel">
+    <div class="card">
+      <h3>发票清单 <span class="muted" id="listStats"></span></h3>
+      <div class="row">
+        <div style="flex:0 0 auto"><button class="primary" id="refreshListBtn" style="margin-top:0">刷新</button></div>
+        <div style="flex:0 0 auto"><button class="primary" id="dedupeBtn" style="margin-top:0">检测重复</button></div>
+        <div style="flex:0 0 auto"><button class="primary" id="clearListBtn" style="margin-top:0">清空</button></div>
+      </div>
+      <p class="muted" id="dupHint"></p>
+      <div id="invoiceList" style="margin-top:10px"></div>
+    </div>
+  </section>
+
+  <!-- 报销组合 -->
+  <section id="tab-combine" class="panel">
+    <div class="card">
+      <h3>按目标金额选择最优发票组合</h3>
+      <div class="row">
+        <div><label>目标金额（元）</label><input type="number" id="combTarget" placeholder="如：1000" /></div>
+        <div><label>允许误差（元）</label><input type="number" id="combTolerance" value="0" /></div>
+      </div>
+      <button class="primary" id="combineBtn">计算组合</button>
+      <p class="muted" id="combineHint"></p>
+    </div>
+    <div class="card" id="combineResultCard" style="display:none">
+      <h3>组合结果 <span id="combineSummary"></span></h3>
+      <div id="combineResult"></div>
+      <div class="row" style="margin-top:14px">
+        <div style="flex:0 0 auto"><button class="primary" id="exportCsvBtn" style="margin-top:0">导出 CSV</button></div>
+        <div style="flex:0 0 auto"><button class="primary" id="exportXlsxBtn" style="margin-top:0">导出 Excel</button></div>
+        <div style="flex:0 0 auto"><button class="primary" id="exportHtmlBtn" style="margin-top:0">打印报销单</button></div>
+      </div>
+    </div>
+  </section>
+
   <!-- 报销规则 -->
   <section id="tab-rules" class="panel">
     <div class="card">
@@ -157,6 +195,7 @@ document.querySelectorAll("nav button").forEach((btn) => {
     btn.classList.add("active");
     $("tab-" + btn.dataset.tab).classList.add("active");
     if (btn.dataset.tab === "rules") loadRules();
+    if (btn.dataset.tab === "list" || btn.dataset.tab === "combine") loadInvoices();
   };
 });
 
@@ -232,6 +271,94 @@ async function loadRules() {
     </div>`).join("") || "<p class='muted'>无匹配规则</p>";
 }
 $("ruleSearch").oninput = loadRules;
+
+// 发票清单
+async function loadInvoices() {
+  const res = await fetch("/api/invoices");
+  const data = await res.json();
+  window.__invoices = data.invoices || [];
+  $("listStats").textContent = `（共 ${data.count} 张）`;
+  $("invoiceList").innerHTML = window.__invoices.map((r) => {
+    const c = r.fields["通用字段"] || {};
+    const s = r.fields["销售方信息"] || {};
+    return `<div class="rule">
+      <b>${c["发票号码"] || "（无号码）"}</b> <small>${c["开票日期"] || ""}</small>
+      <span class="badge">${c["价税合计"] || "?"} 元</span>
+      <small>${s["名称"] || ""}</small>
+      <button data-del="${r.id}" style="float:right;border:none;background:none;color:#dc2626;cursor:pointer">删除</button>
+    </div>`;
+  }).join("") || "<p class='muted'>暂无发票，请先在「发票识别」上传。</p>";
+  document.querySelectorAll("[data-del]").forEach((b) => {
+    b.onclick = async () => {
+      await fetch("/api/invoices/" + b.dataset.del, { method: "DELETE" });
+      loadInvoices();
+    };
+  });
+}
+$("refreshListBtn").onclick = loadInvoices;
+$("clearListBtn").onclick = async () => {
+  if (!confirm("确定清空全部发票记录？")) return;
+  await fetch("/api/invoices", { method: "DELETE" });
+  loadInvoices();
+};
+$("dedupeBtn").onclick = async () => {
+  const res = await fetch("/api/invoices/duplicates");
+  const data = await res.json();
+  if (!data.duplicate_groups) { $("dupHint").textContent = "未发现重复发票"; return; }
+  $("dupHint").innerHTML = data.groups.map((g) =>
+    `重复 ${g.count} 张：号码 ${g.signature["发票号码"]}，金额 ${g.signature["价税合计"]}`
+  ).join("<br>");
+};
+
+// 报销组合
+$("combineBtn").onclick = async () => {
+  const target = parseFloat($("combTarget").value);
+  const tolerance = parseFloat($("combTolerance").value) || 0;
+  if (!target) { alert("请输入目标金额"); return; }
+  const res = await fetch("/api/combination", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ target, tolerance }),
+  });
+  const data = await res.json();
+  if (!res.ok) { $("combineHint").textContent = "错误：" + (data.detail || "计算失败"); return; }
+  window.__combo = data;
+  $("combineHint").textContent = "";
+  $("combineResultCard").style.display = "block";
+  const ok = data.exact ? "pass" : "warn";
+  $("combineSummary").innerHTML =
+    `<span class="badge ${ok}">合计 ${data.sum} 元，差 ${data.diff} 元，共 ${data.count} 张</span>`;
+  $("combineResult").innerHTML = data.invoices.map((r) => {
+    const c = r.fields["通用字段"] || {};
+    return `<div class="rule"><b>${c["发票号码"] || "（无号码）"}</b>
+      <small>${c["开票日期"] || ""}</small>
+      <span class="badge">${c["价税合计"] || "?"} 元</span></div>`;
+  }).join("");
+};
+
+function exportLedger(format) {
+  const ids = (window.__combo?.invoices || []).map((r) => r.id);
+  if (!ids.length) { alert("请先计算组合"); return; }
+  fetch("/api/ledger/export", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ invoice_ids: ids, format }),
+  }).then(async (res) => {
+    if (!res.ok) { alert((await res.json()).detail || "导出失败"); return; }
+    if (format === "html") {
+      const html = await res.text();
+      const w = window.open("", "_blank");
+      w.document.write(html); w.document.close();
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "报销台账." + format; a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+$("exportCsvBtn").onclick = () => exportLedger("csv");
+$("exportXlsxBtn").onclick = () => exportLedger("xlsx");
+$("exportHtmlBtn").onclick = () => exportLedger("html");
 
 // 问答（流式）
 $("chatBtn").onclick = async () => {

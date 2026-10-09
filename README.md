@@ -9,6 +9,9 @@
 | 模块 | 说明 | 是否依赖外部服务 |
 |---|---|---|
 | 发票识别 | 上传图片 / PDF，OCR 取字后由 LLM 抽取发票号码、金额、购销方等结构化字段 | 图片需 PaddleOCR；字段抽取需 LLM |
+| 发票清单 | 识别结果自动入库，支持查看、删除、清空、重复发票检测 | 否 |
+| 报销组合 | 按目标金额从发票清单中选出最优子集（meet-in-the-middle 精确解，超规模自动贪心） | 否 |
+| 台账导出 | 导出 CSV / Excel，或生成可打印报销单（HTML，浏览器打印为 PDF） | Excel 需 openpyxl |
 | 智能审核 | 依据规则引擎做确定性校验（发票要素、30 天时效、差旅住宿限额等） | 否，可离线 |
 | 报销规则 | 规则的增删改查、搜索、导入 / 导出 / 重置 | 否 |
 | 智能问答 | 基于当前规则库的流式问答 | 需 LLM |
@@ -27,9 +30,11 @@ baoxiao.Assistant/
 │   │   ├── invoice_recognizer.py# OCR/PDF + LLM 发票字段抽取
 │   │   ├── ocr_manager.py       # PaddleOCR 懒加载封装
 │   │   ├── llm_client.py        # OpenAI 兼容客户端（普通/流式）
+│   │   ├── combination.py       # 去重 + 最优子集组合
+│   │   ├── ledger.py            # 台账导出 CSV/XLSX/HTML
 │   │   └── city_tier.py         # 城市分级与住宿限额
-│   ├── services/            # 业务服务层
-│   └── routers/             # API 路由：health / invoices / rules / audit / chat
+│   ├── services/            # 业务服务层（含 invoices.json 存储）
+│   └── routers/             # API 路由：health/invoices/rules/audit/combination/ledger/chat
 ├── web/index.html           # 单文件 Web 前端（无需构建）
 ├── rules/default_rules.txt  # 默认报销规则（| 分隔）
 ├── data/                    # 上传文件与输出
@@ -68,7 +73,14 @@ pip install paddleocr paddlepaddle
 |---|---|---|
 | GET | `/api/health` | 健康检查与配置状态 |
 | GET | `/api/invoices/schema` | 发票字段结构 |
-| POST | `/api/invoices/recognize` | 上传发票，返回 OCR 原文 + 结构化字段 |
+| POST | `/api/invoices/recognize` | 上传发票，返回 OCR 原文 + 结构化字段，并入库 |
+| GET | `/api/invoices` | 发票清单 |
+| GET | `/api/invoices/{id}` | 单张发票详情 |
+| DELETE | `/api/invoices/{id}` | 删除单张发票 |
+| DELETE | `/api/invoices` | 清空发票清单 |
+| GET | `/api/invoices/duplicates` | 重复发票检测 |
+| POST | `/api/combination` | 按目标金额选择最优发票组合 |
+| POST | `/api/ledger/export` | 导出台账（`format`: csv / xlsx / html） |
 | GET | `/api/rules` | 规则列表（`?category=` / `?search=`） |
 | GET | `/api/rules/categories` | 规则统计 |
 | POST | `/api/rules` | 新增规则 |
@@ -104,7 +116,7 @@ pytest -q
 
 ## 路线图
 
-- 发票去重与最优组合（对齐目标报销金额）
-- 报销单 PDF / Excel 台账导出
+- ~~发票去重与最优组合（对齐目标报销金额）~~ ✅ 已完成
+- ~~报销单 PDF / Excel 台账导出~~ ✅ 已完成（HTML 可浏览器打印为 PDF）
 - 多用户会话与规则库隔离
 - 对接钉钉 / 企业微信审批流（AuditAgent 原含钉钉集成，可按需移植）

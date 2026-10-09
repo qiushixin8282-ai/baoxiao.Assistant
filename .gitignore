@@ -5,6 +5,7 @@ venv/
 .env
 data/uploads/*
 data/outputs/*
+data/invoices.json
 !data/uploads/.gitkeep
 !data/outputs/.gitkeep
 .pytest_cache/
