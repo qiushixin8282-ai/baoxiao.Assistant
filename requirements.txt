@@ -1,0 +1,16 @@
+# 运行后端所需
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+pydantic==2.10.5
+python-dotenv==1.0.1
+requests==2.32.3
+
+# 发票识别（LLM 字段抽取）
+openai==1.59.6
+PyMuPDF==1.25.1
+pillow==11.1.0
+
+# 可选：本地 OCR。如需识别图片发票再安装（体积较大，建议按需）
+# paddleocr==3.3.2
+# paddlepaddle==3.1.0
