@@ -14,6 +14,8 @@
 | 台账导出 | 导出 CSV / Excel，或生成可打印报销单（HTML，浏览器打印为 PDF） | Excel 需 openpyxl |
 | 智能审核 | 依据规则引擎做确定性校验（发票要素、30 天时效、差旅住宿限额等） | 否，可离线 |
 | 报销规则 | 规则的增删改查、搜索、导入 / 导出 / 重置 | 否 |
+| 多用户工作区 | 通过请求头 `X-Workspace-Id` 隔离规则库与发票清单 | 否 |
+| 审批推送 | 将报销单推送至钉钉 / 企业微信群机器人 | 需配置 Webhook |
 | 智能问答 | 基于当前规则库的流式问答 | 需 LLM |
 
 > 关键设计：重依赖（PaddleOCR、PyMuPDF、OpenAI SDK）全部**懒加载**。未安装或未配置时，后端仍可启动，规则与审核功能不受影响。
@@ -33,19 +35,30 @@ baoxiao.Assistant/
 │   │   ├── combination.py       # 去重 + 最优子集组合
 │   │   ├── ledger.py            # 台账导出 CSV/XLSX/HTML
 │   │   └── city_tier.py         # 城市分级与住宿限额
-│   ├── services/            # 业务服务层（含 invoices.json 存储）
-│   └── routers/             # API 路由：health/invoices/rules/audit/combination/ledger/chat
+│   ├── services/            # 业务服务层（工作区、存储、审批推送）
+│   └── routers/             # API 路由：health/workspaces/invoices/rules/audit/combination/ledger/approval/system/chat
 ├── web/
 │   ├── index.html           # 连接后端的单文件前端（无需构建）
 │   └── demo.html            # 自包含演示页（内置示例数据，可离线打开）
 ├── rules/default_rules.txt  # 默认报销规则（| 分隔）
-├── data/                    # 上传文件与输出
+├── scripts/install_ocr.py   # PaddleOCR 一键安装
+├── data/                    # 上传文件、导出与工作区数据
 ├── tests/test_api.py        # API 冒烟测试
 ├── requirements.txt
 └── run.py
 ```
 
+## 多用户工作区
+
+默认所有请求落在 `default` 工作区。通过请求头 `X-Workspace-Id` 切换到独立工作区，规则库与发票清单各自隔离、独立持久化于 `data/workspaces/<id>/`：
+
+```bash
+curl -H "X-Workspace-Id: team-a" http://127.0.0.1:8000/api/rules
+```
+
 ## 网页演示（无需后端）
+
+**在线演示：https://qiushixin8282-ai.github.io/baoxiao.Assistant/**
 
 `web/demo.html` 是一个**完全自包含的演示页**：内置示例发票与规则，纯前端运行，可直接双击用浏览器打开，也可由后端在 `/demo` 提供。
 
@@ -73,10 +86,21 @@ python run.py
 ### 启用图片发票 OCR（可选）
 
 ```bash
-pip install paddleocr paddlepaddle
+python scripts/install_ocr.py        # CPU 版（默认）
+python scripts/install_ocr.py gpu    # GPU 版
 ```
 
-不安装时，图片识别会返回明确提示；PDF（文字版）与规则、审核功能不受影响。
+不安装时，图片识别会返回明确提示；PDF（文字版）与规则、审核、组合、导出台账功能不受影响。可通过 `GET /api/system/ocr` 查看安装状态。
+
+### 配置审批机器人（可选）
+
+在 `.env` 中填入群机器人 Webhook 即可：
+
+```
+DINGTALK_WEBHOOK=https://oapi.dingtalk.com/robot/send?access_token=...
+DINGTALK_SECRET=SEC...      # 若钉钉机器人开启「加签」
+WECOM_WEBHOOK=https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=...
+```
 
 ## API 一览
 
@@ -102,6 +126,12 @@ pip install paddleocr paddlepaddle
 | POST | `/api/audit` | 依据发票字段 + 上下文执行审核 |
 | POST | `/api/chat` | 非流式问答 |
 | POST | `/api/chat/stream` | 流式问答（SSE） |
+| GET / POST / DELETE | `/api/workspaces` | 工作区管理（多用户隔离） |
+| GET | `/api/approval/config` | 审批渠道配置状态 |
+| POST | `/api/approval/submit` | 推送报销单到钉钉 / 企微机器人 |
+| GET | `/api/system/ocr` | OCR 安装状态与安装方式 |
+
+> 除 `/api/workspaces`、`/api/system`、`/api/health` 外的接口均支持 `X-Workspace-Id` 请求头。
 
 ## 测试
 
@@ -129,5 +159,7 @@ pytest -q
 
 - ~~发票去重与最优组合（对齐目标报销金额）~~ ✅ 已完成
 - ~~报销单 PDF / Excel 台账导出~~ ✅ 已完成（HTML 可浏览器打印为 PDF）
-- 多用户会话与规则库隔离
-- 对接钉钉 / 企业微信审批流（AuditAgent 原含钉钉集成，可按需移植）
+- ~~多用户会话与规则库隔离~~ ✅ 已完成（工作区 + `X-Workspace-Id`）
+- ~~对接钉钉 / 企业微信审批流~~ ✅ 已完成（群机器人 Webhook 推送）
+- ~~PaddleOCR 一键安装~~ ✅ 已完成（`scripts/install_ocr.py`）
+- 待办：会话历史持久化、审批回调与状态回写、报表统计看板

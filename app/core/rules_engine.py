@@ -43,8 +43,32 @@ class RulesEngine:
     def __init__(self, rules_file: Optional[Path] = None) -> None:
         self.rules: List[ReimbursementRule] = []
         self.categories: Dict[str, List[str]] = {}
-        if rules_file and Path(rules_file).exists():
-            self.load_from_file(Path(rules_file))
+        self.path: Optional[Path] = Path(rules_file) if rules_file else None
+        if self.path and self.path.exists():
+            self.load_from_file(self.path)
+
+    # ---- 持久化 ----
+    def to_text(self) -> str:
+        lines = [HEADER, ""]
+        for r in self.rules:
+            lines.append(
+                "|".join(
+                    [r.category, r.subcategory, r.clause_id, r.title, r.content, r.attachment or ""]
+                )
+            )
+        return "\n".join(lines) + "\n"
+
+    def save(self, file_path: Optional[Path] = None) -> bool:
+        target = Path(file_path) if file_path else self.path
+        if target is None:
+            return False
+        try:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(self.to_text(), encoding="utf-8")
+            return True
+        except Exception as exc:  # pragma: no cover
+            logger.error("保存规则失败 %s: %s", target, exc)
+            return False
 
     # ---- 加载 ----
     def load_from_file(self, file_path: Path) -> bool:

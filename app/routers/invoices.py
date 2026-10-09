@@ -1,13 +1,13 @@
-"""发票识别与发票清单接口。"""
+"""发票识别与发票清单接口（按工作区隔离）。"""
 
 from typing import Optional
 
-from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from app.core.combination import find_duplicates
 from app.core.invoice_recognizer import FIELD_KEYS
 from app.services.invoice_service import process_invoice, save_upload
-from app.services.store import get_invoice_store
+from app.services.workspace import Workspace, get_workspace
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
 
@@ -19,33 +19,33 @@ def invoice_schema() -> dict:
 
 
 @router.get("")
-def list_invoices() -> dict:
-    records = get_invoice_store().list()
-    return {"count": len(records), "invoices": records}
+def list_invoices(ws: Workspace = Depends(get_workspace)) -> dict:
+    records = ws.store.list()
+    return {"count": len(records), "workspace": ws.id, "invoices": records}
 
 
 @router.get("/duplicates")
-def duplicates() -> dict:
-    groups = find_duplicates(get_invoice_store().list())
+def duplicates(ws: Workspace = Depends(get_workspace)) -> dict:
+    groups = find_duplicates(ws.store.list())
     return {"duplicate_groups": len(groups), "groups": groups}
 
 
 @router.delete("")
-def clear_invoices() -> dict:
-    return {"cleared": get_invoice_store().clear()}
+def clear_invoices(ws: Workspace = Depends(get_workspace)) -> dict:
+    return {"cleared": ws.store.clear()}
 
 
 @router.get("/{invoice_id}")
-def get_invoice(invoice_id: str) -> dict:
-    rec = get_invoice_store().get(invoice_id)
+def get_invoice(invoice_id: str, ws: Workspace = Depends(get_workspace)) -> dict:
+    rec = ws.store.get(invoice_id)
     if not rec:
         raise HTTPException(status_code=404, detail=f"未找到发票: {invoice_id}")
     return rec
 
 
 @router.delete("/{invoice_id}")
-def delete_invoice(invoice_id: str) -> dict:
-    if not get_invoice_store().delete(invoice_id):
+def delete_invoice(invoice_id: str, ws: Workspace = Depends(get_workspace)) -> dict:
+    if not ws.store.delete(invoice_id):
         raise HTTPException(status_code=404, detail=f"未找到发票: {invoice_id}")
     return {"deleted": invoice_id}
 
@@ -55,8 +55,9 @@ async def recognize(
     file: UploadFile = File(...),
     lang: Optional[str] = Form(None),
     save: bool = Form(True),
+    ws: Workspace = Depends(get_workspace),
 ) -> dict:
-    """上传发票图片/PDF，返回 OCR 原文与结构化字段，并写入发票清单。"""
+    """上传发票图片/PDF，返回 OCR 原文与结构化字段，并写入当前工作区清单。"""
     content = await file.read()
     try:
         path = save_upload(file.filename or "invoice", content)
@@ -68,7 +69,7 @@ async def recognize(
         raise HTTPException(status_code=503, detail=result.get("error", "识别失败"))
 
     if save:
-        record = get_invoice_store().add(
+        record = ws.store.add(
             result["fields"], filename=result.get("file"), engine=result.get("engine")
         )
         result["id"] = record["id"]

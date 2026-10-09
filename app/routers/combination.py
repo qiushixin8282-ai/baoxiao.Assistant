@@ -1,12 +1,12 @@
-"""发票组合接口：按目标金额选择最优发票子集。"""
+"""发票组合接口：按目标金额选择最优发票子集（按工作区隔离）。"""
 
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from app.core.combination import invoice_amount, select_combination
-from app.services.store import get_invoice_store
+from app.services.workspace import Workspace, get_workspace
 
 router = APIRouter(prefix="/combination", tags=["combination"])
 
@@ -18,9 +18,8 @@ class CombinationRequest(BaseModel):
 
 
 @router.post("")
-def combine(req: CombinationRequest) -> dict:
-    store = get_invoice_store()
-    records = store.get_many(req.invoice_ids) if req.invoice_ids else store.list()
+def combine(req: CombinationRequest, ws: Workspace = Depends(get_workspace)) -> dict:
+    records = ws.store.get_many(req.invoice_ids) if req.invoice_ids else ws.store.list()
     if not records:
         raise HTTPException(status_code=400, detail="没有可用于组合的发票")
 

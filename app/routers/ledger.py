@@ -1,13 +1,13 @@
-"""报销台账导出接口。"""
+"""报销台账导出接口（按工作区隔离）。"""
 
 from typing import List, Optional
 from urllib.parse import quote
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 
 from app.core.ledger import to_csv, to_html, to_xlsx
-from app.services.store import get_invoice_store
+from app.services.workspace import Workspace, get_workspace
 
 router = APIRouter(prefix="/ledger", tags=["ledger"])
 
@@ -23,9 +23,8 @@ def _content_disposition(filename: str) -> str:
 
 
 @router.post("/export")
-def export(req: ExportRequest) -> Response:
-    store = get_invoice_store()
-    records = store.get_many(req.invoice_ids) if req.invoice_ids else store.list()
+def export(req: ExportRequest, ws: Workspace = Depends(get_workspace)) -> Response:
+    records = ws.store.get_many(req.invoice_ids) if req.invoice_ids else ws.store.list()
     if not records:
         raise HTTPException(status_code=400, detail="没有可导出的发票")
 

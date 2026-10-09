@@ -43,6 +43,11 @@ class Settings:
     ocr_lang: str = field(default_factory=lambda: os.getenv("OCR_LANG", "ch"))
     ocr_enabled: bool = field(default_factory=lambda: _bool(os.getenv("OCR_ENABLED"), True))
 
+    # 审批流 Webhook（钉钉机器人 / 企业微信机器人）
+    dingtalk_webhook: str = field(default_factory=lambda: os.getenv("DINGTALK_WEBHOOK", ""))
+    dingtalk_secret: str = field(default_factory=lambda: os.getenv("DINGTALK_SECRET", ""))
+    wecom_webhook: str = field(default_factory=lambda: os.getenv("WECOM_WEBHOOK", ""))
+
     # 存储
     upload_dir: Path = UPLOAD_DIR
     output_dir: Path = OUTPUT_DIR
@@ -63,6 +68,15 @@ class Settings:
     @property
     def llm_configured(self) -> bool:
         return bool(self.openai_api_key)
+
+    @property
+    def approval_channels(self) -> List[str]:
+        channels = []
+        if self.dingtalk_webhook:
+            channels.append("dingtalk")
+        if self.wecom_webhook:
+            channels.append("wecom")
+        return channels
 
     def ensure_dirs(self) -> None:
         for d in (self.upload_dir, self.output_dir, self.rules_dir):

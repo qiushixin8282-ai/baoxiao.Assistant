@@ -3,12 +3,12 @@
 import json
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from app.core.llm_client import LLMUnavailableError, get_llm_client
-from app.core.rules_engine import get_rules_engine
+from app.services.workspace import Workspace, get_workspace
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -26,8 +26,8 @@ class ChatRequest(BaseModel):
     history: Optional[List[ChatMessage]] = None
 
 
-def _build_messages(req: ChatRequest) -> List[dict]:
-    rules_text = get_rules_engine().get_rules_for_ai_prompt()
+def _build_messages(req: ChatRequest, ws: Workspace) -> List[dict]:
+    rules_text = ws.rules.get_rules_for_ai_prompt()
     system = f"{SYSTEM_PROMPT}\n\n{rules_text}"
     messages = [{"role": "system", "content": system}]
     for m in req.history or []:
@@ -37,19 +37,19 @@ def _build_messages(req: ChatRequest) -> List[dict]:
 
 
 @router.post("")
-def chat(req: ChatRequest) -> dict:
+def chat(req: ChatRequest, ws: Workspace = Depends(get_workspace)) -> dict:
     """非流式问答。"""
     try:
-        answer = get_llm_client().chat(_build_messages(req))
+        answer = get_llm_client().chat(_build_messages(req, ws))
     except LLMUnavailableError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     return {"reply": answer}
 
 
 @router.post("/stream")
-def chat_stream(req: ChatRequest) -> StreamingResponse:
+def chat_stream(req: ChatRequest, ws: Workspace = Depends(get_workspace)) -> StreamingResponse:
     """流式问答，返回 text/event-stream。"""
-    messages = _build_messages(req)
+    messages = _build_messages(req, ws)
 
     def event_gen():
         try:

@@ -111,9 +111,9 @@ def test_select_combination_exact():
 
 def test_combination_endpoint_and_ledger():
     client.delete("/api/invoices")
-    from app.services.store import get_invoice_store
+    from app.services.workspace import manager
 
-    store = get_invoice_store()
+    store = manager.get("default").store
     r1 = store.add(_sample("1001", 300))
     r2 = store.add(_sample("1002", 200))
     store.add(_sample("1003", 150))
@@ -150,12 +150,52 @@ def test_combination_endpoint_and_ledger():
 
 def test_duplicates():
     client.delete("/api/invoices")
-    from app.services.store import get_invoice_store
+    from app.services.workspace import manager
 
-    store = get_invoice_store()
+    store = manager.get("default").store
     store.add(_sample("2001", 100))
     store.add(_sample("2001", 100))
     res = client.get("/api/invoices/duplicates")
     assert res.status_code == 200
     assert res.json()["duplicate_groups"] >= 1
     client.delete("/api/invoices")
+
+
+def test_workspace_isolation():
+    client.delete("/api/workspaces/ws-test")
+    client.post("/api/workspaces", json={"id": "ws-test"})
+
+    base = client.get("/api/rules").json()["count"]
+    payload = {
+        "category": "隔离测试",
+        "subcategory": "子类",
+        "clause_id": "W1",
+        "title": "仅工作区可见",
+        "content": "内容",
+    }
+    res = client.post("/api/rules", json=payload, headers={"X-Workspace-Id": "ws-test"})
+    assert res.status_code == 201
+
+    ws_count = client.get("/api/rules", headers={"X-Workspace-Id": "ws-test"}).json()["count"]
+    default_count = client.get("/api/rules").json()["count"]
+    assert ws_count == base + 1
+    assert default_count == base
+
+    client.delete("/api/workspaces/ws-test")
+
+
+def test_invalid_workspace_id():
+    res = client.get("/api/rules", headers={"X-Workspace-Id": "../evil"})
+    assert res.status_code == 400
+
+
+def test_approval_config():
+    res = client.get("/api/approval/config")
+    assert res.status_code == 200
+    assert "channels" in res.json()
+
+
+def test_ocr_status():
+    res = client.get("/api/system/ocr")
+    assert res.status_code == 200
+    assert "available" in res.json()
