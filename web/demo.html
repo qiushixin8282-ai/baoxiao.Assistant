@@ -6,243 +6,383 @@
 <title>小荷包报销助手 · 在线演示</title>
 <style>
   :root {
-    --bg: #f4f6fb; --card: #fff; --ink: #1f2937; --muted: #6b7280;
-    --brand: #2563eb; --brand-dark: #1d4ed8; --violet: #7c3aed;
-    --ok: #16a34a; --warn: #d97706; --fail: #dc2626; --line: #e5e7eb;
-    --shadow: 0 1px 3px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.05);
+    --indigo: #6366f1;
+    --violet: #8b5cf6;
+    --indigo-600: #4f46e5;
+    --ink: #0f172a;
+    --slate: #475569;
+    --muted: #64748b;
+    --line: #eef1f6;
+    --bg: #f5f7fb;
+    --card: #ffffff;
+    --ok: #059669;
+    --ok-bg: #ecfdf5;
+    --warn: #d97706;
+    --warn-bg: #fffbeb;
+    --fail: #dc2626;
+    --fail-bg: #fef2f2;
+    --radius: 16px;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, .05);
+    --shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 18px 40px -22px rgba(15, 23, 42, .35);
   }
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
-    margin: 0; font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
-    background: var(--bg); color: var(--ink);
+    margin: 0;
+    font-family: "Inter", "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(1200px 500px at 100% -10%, rgba(139, 92, 246, .10), transparent 60%),
+      radial-gradient(900px 500px at -10% 0%, rgba(99, 102, 241, .10), transparent 55%),
+      var(--bg);
+    -webkit-font-smoothing: antialiased;
   }
-  header {
-    background: linear-gradient(135deg, var(--brand), var(--violet));
-    color: #fff; padding: 22px 28px; display: flex; align-items: center; justify-content: space-between;
-    flex-wrap: wrap; gap: 10px;
+
+  .app { display: flex; min-height: 100vh; gap: 22px; padding: 22px; max-width: 1200px; margin: 0 auto; }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar {
+    width: 236px; flex: 0 0 236px; background: var(--card); border: 1px solid var(--line);
+    border-radius: 20px; padding: 20px 14px; box-shadow: var(--shadow);
+    display: flex; flex-direction: column; position: sticky; top: 22px; height: calc(100vh - 44px);
   }
-  header h1 { margin: 0; font-size: 21px; letter-spacing: .5px; }
-  header p { margin: 6px 0 0; font-size: 13px; opacity: .88; }
-  .demo-badge {
-    background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.4);
-    padding: 5px 12px; border-radius: 999px; font-size: 12px;
+  .brand { display: flex; align-items: center; gap: 11px; padding: 4px 8px 18px; }
+  .logo {
+    width: 38px; height: 38px; border-radius: 11px; flex: 0 0 38px;
+    background: linear-gradient(135deg, var(--indigo), var(--violet));
+    display: grid; place-items: center; color: #fff; box-shadow: 0 8px 20px -8px rgba(99, 102, 241, .9);
   }
-  nav {
-    display: flex; gap: 4px; padding: 0 20px; background: var(--card);
-    border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5;
-    overflow-x: auto;
+  .brand b { font-size: 15px; letter-spacing: .2px; }
+  .brand small { display: block; color: var(--muted); font-size: 11px; font-weight: 500; margin-top: 2px; }
+  .nav { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+  .nav button {
+    display: flex; align-items: center; gap: 11px; width: 100%;
+    border: none; background: none; cursor: pointer; color: var(--slate);
+    font-size: 14px; font-family: inherit; font-weight: 500;
+    padding: 10px 12px; border-radius: 11px; text-align: left; transition: all .16s ease;
   }
-  nav button {
-    border: none; background: none; padding: 14px 15px; cursor: pointer;
-    font-size: 14px; color: var(--muted); border-bottom: 2px solid transparent; white-space: nowrap;
+  .nav button svg { width: 18px; height: 18px; stroke-width: 1.9; }
+  .nav button:hover { background: #f5f6fb; color: var(--ink); }
+  .nav button.active {
+    background: linear-gradient(135deg, rgba(99, 102, 241, .12), rgba(139, 92, 246, .12));
+    color: var(--indigo-600);
   }
-  nav button.active { color: var(--brand); border-bottom-color: var(--brand); font-weight: 600; }
-  main { max-width: 980px; margin: 22px auto; padding: 0 16px; }
-  .panel { display: none; animation: fade .25s ease; }
-  .panel.active { display: block; }
-  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .nav button.active svg { color: var(--indigo-600); }
+  .side-foot { margin-top: auto; padding: 12px; border-radius: 12px; background: #f8f9fd; font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .side-foot b { color: var(--slate); }
+
+  /* ---------- Content ---------- */
+  .content { flex: 1; min-width: 0; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 2px 4px 16px; flex-wrap: wrap; }
+  .topbar h1 { margin: 0; font-size: 22px; letter-spacing: -.2px; }
+  .topbar p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 999px;
+    font-size: 12px; font-weight: 600; color: var(--indigo-600);
+    background: #fff; border: 1px solid #e6e6fb; box-shadow: var(--shadow-sm);
+  }
+  .chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--indigo); box-shadow: 0 0 0 3px rgba(99,102,241,.18); }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .stat {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .stat span { font-size: 12px; color: var(--muted); }
+  .stat b { display: block; font-size: 21px; margin-top: 5px; letter-spacing: -.3px; }
+  .stat b em { font-style: normal; font-size: 13px; color: var(--muted); font-weight: 500; margin-left: 3px; }
+
+  .panel { display: none; }
+  .panel.active { display: block; animation: rise .28s cubic-bezier(.2, .7, .3, 1); }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
   .card {
-    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-    padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow);
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 22px; margin-bottom: 16px; box-shadow: var(--shadow-sm);
   }
-  .card h3 { margin: 0 0 12px; font-size: 15px; }
-  label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  .card h3 { margin: 0 0 4px; font-size: 15px; }
+  .card .sub { color: var(--muted); font-size: 12.5px; margin: 0 0 14px; line-height: 1.6; }
+
+  label { display: block; font-size: 12.5px; color: var(--muted); margin: 12px 0 5px; font-weight: 500; }
   input[type=text], input[type=number], textarea, select {
-    width: 100%; padding: 9px 10px; border: 1px solid var(--line);
-    border-radius: 8px; font-size: 14px; font-family: inherit;
+    width: 100%; padding: 10px 12px; border: 1px solid #e3e7ef; border-radius: 10px;
+    font-size: 14px; font-family: inherit; color: var(--ink); background: #fcfdff; transition: all .15s;
   }
-  textarea { min-height: 84px; resize: vertical; }
-  button.primary {
-    background: var(--brand); color: #fff; border: none; border-radius: 8px;
-    padding: 10px 18px; font-size: 14px; cursor: pointer; margin-top: 14px;
-    transition: background .15s;
+  input:focus, textarea:focus { outline: none; border-color: var(--indigo); box-shadow: 0 0 0 4px rgba(99, 102, 241, .14); background: #fff; }
+  textarea { min-height: 92px; resize: vertical; line-height: 1.6; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer;
+    font-family: inherit; font-size: 14px; font-weight: 600; border-radius: 11px; padding: 10px 18px;
+    color: #fff; background: linear-gradient(135deg, var(--indigo), var(--violet));
+    box-shadow: 0 10px 22px -10px rgba(99, 102, 241, .9); transition: all .16s; margin-top: 14px;
   }
-  button.primary:hover { background: var(--brand-dark); }
-  button.ghost {
-    background: #eef2ff; color: var(--brand); border: 1px solid #c7d2fe;
-    border-radius: 8px; padding: 9px 16px; font-size: 14px; cursor: pointer; margin-top: 14px;
-  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 14px 26px -10px rgba(99, 102, 241, .95); }
+  .btn:active { transform: translateY(0); }
+  .btn svg { width: 16px; height: 16px; }
+  .btn.ghost { color: var(--indigo-600); background: #fff; border: 1px solid #e2e2fb; box-shadow: var(--shadow-sm); }
+  .btn.ghost:hover { background: #f6f6fe; }
+  .btn.sm { padding: 8px 14px; font-size: 13px; margin-top: 0; }
+
   .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
   .row > div { flex: 1; min-width: 150px; }
+  .row.actions { align-items: center; gap: 10px; }
+
   pre {
-    background: #0f172a; color: #e2e8f0; padding: 14px; border-radius: 8px;
-    overflow: auto; font-size: 12px; max-height: 340px; white-space: pre-wrap;
+    background: #0b1220; color: #d7e0f5; padding: 16px 18px; border-radius: 12px;
+    overflow: auto; font-size: 12.5px; max-height: 340px; white-space: pre-wrap; line-height: 1.7;
+    font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
   }
-  .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; }
-  .badge.pass { background: #dcfce7; color: var(--ok); }
-  .badge.fail { background: #fee2e2; color: var(--fail); }
-  .badge.warn { background: #fef3c7; color: var(--warn); }
-  .badge.skip { background: #eef2f7; color: var(--muted); }
-  .badge.pill { background: #eef2ff; color: var(--brand); }
-  .rule { border-bottom: 1px solid var(--line); padding: 9px 0; font-size: 13px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 600; }
+  .badge.pass { background: var(--ok-bg); color: var(--ok); }
+  .badge.fail { background: var(--fail-bg); color: var(--fail); }
+  .badge.warn { background: var(--warn-bg); color: var(--warn); }
+  .badge.skip { background: #f1f5f9; color: var(--muted); }
+  .badge.pill { background: #eef2ff; color: var(--indigo-600); }
+
+  .rule { display: flex; align-items: flex-start; gap: 12px; padding: 13px 2px; border-bottom: 1px solid var(--line); font-size: 13.5px; }
   .rule:last-child { border-bottom: none; }
-  .rule small { color: var(--muted); }
-  table { border-collapse: collapse; width: 100%; font-size: 13px; }
-  th, td { border-bottom: 1px solid var(--line); padding: 8px 6px; text-align: left; }
-  th { color: var(--muted); font-weight: 600; }
-  #chatLog { min-height: 200px; max-height: 400px; overflow: auto; margin-bottom: 10px; }
-  .msg { padding: 9px 13px; border-radius: 10px; margin: 7px 0; font-size: 14px; white-space: pre-wrap; line-height: 1.5; }
-  .msg.user { background: #dbeafe; margin-left: 16%; }
-  .msg.assistant { background: #f3f4f6; margin-right: 8%; }
-  .muted { color: var(--muted); font-size: 12px; }
+  .rule .grow { flex: 1; min-width: 0; }
+  .rule .title { font-weight: 600; }
+  .rule small, .rule .meta { color: var(--muted); font-size: 12px; }
+  .rule .desc { color: var(--slate); margin-top: 3px; line-height: 1.6; }
+
+  .item {
+    display: flex; align-items: center; gap: 12px; padding: 13px 15px; border: 1px solid var(--line);
+    border-radius: 12px; margin-bottom: 8px; background: #fcfdff; transition: all .15s;
+  }
+  .item:hover { border-color: #dcdffb; background: #fff; box-shadow: var(--shadow-sm); }
+  .item .grow { flex: 1; min-width: 0; }
+  .item .amt { font-weight: 700; }
+  .icon-btn {
+    border: none; background: #f1f5f9; color: var(--muted); width: 30px; height: 30px; border-radius: 9px;
+    cursor: pointer; display: grid; place-items: center; transition: all .15s; flex: 0 0 30px;
+  }
+  .icon-btn:hover { background: var(--fail-bg); color: var(--fail); }
+  .icon-btn svg { width: 15px; height: 15px; }
+
+  #chatLog { display: flex; flex-direction: column; gap: 4px; min-height: 180px; max-height: 400px; overflow: auto; margin-bottom: 12px; padding: 4px; }
+  .msg { padding: 11px 15px; border-radius: 14px; font-size: 14px; line-height: 1.65; white-space: pre-wrap; max-width: 82%; animation: rise .2s ease; }
+  .msg.user { align-self: flex-end; background: linear-gradient(135deg, var(--indigo), var(--violet)); color: #fff; border-bottom-right-radius: 4px; }
+  .msg.assistant { align-self: flex-start; background: #f3f4f8; color: var(--ink); border-bottom-left-radius: 4px; }
+
+  .muted { color: var(--muted); font-size: 12.5px; }
+  .skeleton { height: 14px; border-radius: 7px; background: linear-gradient(90deg, #eef2f7, #e2e8f0, #eef2f7); background-size: 200% 100%; animation: sk 1s infinite; }
+  @keyframes sk { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
   .toast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
-    background: #111827; color: #fff; padding: 11px 20px; border-radius: 10px; font-size: 13px;
-    opacity: 0; pointer-events: none; transition: all .25s; z-index: 50;
+    position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: #0f172a; color: #fff; padding: 12px 22px; border-radius: 12px; font-size: 13px; font-weight: 500;
+    opacity: 0; pointer-events: none; transition: all .28s cubic-bezier(.2,.7,.3,1); z-index: 50;
+    box-shadow: 0 20px 40px -16px rgba(15,23,42,.6);
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .skeleton { height: 12px; border-radius: 6px; background: linear-gradient(90deg,#eef2f7,#e2e8f0,#eef2f7); background-size: 200% 100%; animation: sk 1s infinite; }
-  @keyframes sk { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+  .empty { text-align: center; color: var(--muted); padding: 30px 10px; font-size: 13px; }
+
+  @media (max-width: 860px) {
+    .app { flex-direction: column; padding: 14px; gap: 14px; }
+    .sidebar { width: auto; flex: none; height: auto; position: static; padding: 14px; }
+    .brand { padding-bottom: 10px; }
+    .nav { flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
+    .nav button { white-space: nowrap; width: auto; }
+    .side-foot { display: none; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+  }
 </style>
 </head>
 <body>
-<header>
-  <div>
-    <h1>小荷包报销助手</h1>
-    <p>发票识别 · 智能审核 · 清单去重 · 最优组合 · 台账导出 · 智能问答</p>
-  </div>
-  <span class="demo-badge">演示模式 · 内置示例数据</span>
-</header>
-
-<nav>
-  <button class="active" data-tab="invoice">发票识别</button>
-  <button data-tab="audit">智能审核</button>
-  <button data-tab="list">发票清单</button>
-  <button data-tab="combine">报销组合</button>
-  <button data-tab="rules">报销规则</button>
-  <button data-tab="chat">智能问答</button>
-</nav>
-
-<main>
-  <!-- 发票识别 -->
-  <section id="tab-invoice" class="panel active">
-    <div class="card">
-      <h3>上传发票（演示：使用示例发票）</h3>
-      <p class="muted">真实系统中此处支持 JPG/PNG/PDF 上传，后端以 PaddleOCR 取字并由大模型抽取字段。</p>
-      <button class="primary" id="recognizeBtn">识别示例发票</button>
-    </div>
-    <div class="card" id="fieldsCard" style="display:none">
-      <h3>结构化字段 <span class="badge pill" id="engineTag"></span></h3>
-      <div id="fieldsLoading" class="skeleton" style="display:none"></div>
-      <pre id="fieldsOut"></pre>
-      <button class="ghost" id="toAuditBtn">送到智能审核</button>
-    </div>
-  </section>
-
-  <!-- 智能审核 -->
-  <section id="tab-audit" class="panel">
-    <div class="card">
-      <h3>审核上下文</h3>
-      <div class="row">
-        <div><label>出差城市</label><input type="text" id="ctxCity" value="北京" /></div>
-        <div><label>金额（元）</label><input type="number" id="ctxAmount" value="580" /></div>
-        <div><label>住宿晚数</label><input type="number" id="ctxNights" value="1" /></div>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+          <path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-1"/>
+          <path d="M16 12h5v4h-5a2 2 0 0 1 0-4z"/>
+        </svg>
       </div>
-      <button class="primary" id="auditBtn">执行审核</button>
+      <div><b>小荷包报销助手</b><small>Reimbursement Assistant</small></div>
     </div>
-    <div class="card" id="auditResultCard" style="display:none">
-      <h3>审核结果 <span id="auditConclusion"></span></h3>
-      <div id="auditResults"></div>
+    <nav class="nav">
+      <button class="active" data-tab="invoice">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15h6"/><path d="M9 11h3"/></svg>
+        发票识别
+      </button>
+      <button data-tab="audit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        智能审核
+      </button>
+      <button data-tab="list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        发票清单
+      </button>
+      <button data-tab="combine">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.3 7L12 12l8.7-5"/><path d="M12 22V12"/></svg>
+        报销组合
+      </button>
+      <button data-tab="rules">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        报销规则
+      </button>
+      <button data-tab="chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        智能问答
+      </button>
+    </nav>
+    <div class="side-foot">
+      <b>演示模式</b><br/>内置示例数据，纯前端运行，无需后端。
     </div>
-  </section>
+  </aside>
 
-  <!-- 发票清单 -->
-  <section id="tab-list" class="panel">
-    <div class="card">
-      <h3>发票清单 <span class="muted" id="listStats"></span></h3>
-      <div class="row">
-        <div style="flex:0 0 auto"><button class="ghost" id="dedupeBtn" style="margin-top:0">检测重复</button></div>
-        <div style="flex:0 0 auto"><button class="ghost" id="resetListBtn" style="margin-top:0">重置示例</button></div>
+  <!-- Content -->
+  <main class="content">
+    <div class="topbar">
+      <div>
+        <h1 id="pageTitle">发票识别</h1>
+        <p id="pageDesc">上传图片或 PDF，自动提取发票字段</p>
       </div>
-      <p class="muted" id="dupHint"></p>
-      <div id="invoiceList" style="margin-top:10px"></div>
+      <span class="chip"><span class="dot"></span> 演示数据</span>
     </div>
-  </section>
 
-  <!-- 报销组合 -->
-  <section id="tab-combine" class="panel">
-    <div class="card">
-      <h3>按目标金额选择最优发票组合</h3>
-      <div class="row">
-        <div><label>目标金额（元）</label><input type="number" id="combTarget" value="1000" /></div>
-        <div><label>允许误差（元）</label><input type="number" id="combTolerance" value="0" /></div>
+    <div class="stats">
+      <div class="stat"><span>发票张数</span><b id="stCount">0</b></div>
+      <div class="stat"><span>合计金额</span><b id="stTotal">0<em>元</em></b></div>
+      <div class="stat"><span>规则条数</span><b id="stRules">0</b></div>
+      <div class="stat"><span>重复发票</span><b id="stDup">0</b></div>
+    </div>
+
+    <!-- 发票识别 -->
+    <section id="tab-invoice" class="panel active">
+      <div class="card">
+        <h3>上传发票</h3>
+        <p class="sub">真实系统支持 JPG / PNG / PDF，后端以 PaddleOCR 取字并由大模型抽取字段。此处点击按钮使用内置示例发票演示。</p>
+        <button class="btn" id="recognizeBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          识别示例发票
+        </button>
       </div>
-      <button class="primary" id="combineBtn">计算组合</button>
-      <span class="muted">（演示为前端精确枚举；后端为大集合的 meet-in-the-middle 精确解）</span>
-    </div>
-    <div class="card" id="combineResultCard" style="display:none">
-      <h3>组合结果 <span id="combineSummary"></span></h3>
-      <div id="combineResult"></div>
-      <button class="ghost" id="exportCsvBtn">导出 CSV 台账</button>
-    </div>
-  </section>
-
-  <!-- 报销规则 -->
-  <section id="tab-rules" class="panel">
-    <div class="card">
-      <h3>报销规则 <span class="muted" id="ruleStats"></span></h3>
-      <input type="text" id="ruleSearch" placeholder="搜索规则关键词，如：住宿" />
-      <div id="ruleList" style="margin-top:10px"></div>
-    </div>
-  </section>
-
-  <!-- 智能问答 -->
-  <section id="tab-chat" class="panel">
-    <div class="card">
-      <h3>向报销助手提问</h3>
-      <div id="chatLog"></div>
-      <textarea id="chatInput" placeholder="例如：差旅费的住宿标准是什么？"></textarea>
-      <div class="row" style="align-items:center">
-        <div style="flex:0 0 auto"><button class="primary" id="chatBtn" style="margin-top:10px">发送</button></div>
-        <div class="muted">可试：住宿标准 / 报销时效 / 发票要求</div>
+      <div class="card" id="fieldsCard" style="display:none">
+        <h3>结构化字段 <span class="badge pill" id="engineTag"></span></h3>
+        <div id="fieldsLoading" class="skeleton" style="display:none;margin:12px 0"></div>
+        <pre id="fieldsOut"></pre>
+        <button class="btn ghost" id="toAuditBtn">送到智能审核</button>
       </div>
-    </div>
-  </section>
-</main>
+    </section>
+
+    <!-- 智能审核 -->
+    <section id="tab-audit" class="panel">
+      <div class="card">
+        <h3>审核上下文</h3>
+        <p class="sub">填写出差城市与金额，系统依据规则逐条校验。</p>
+        <div class="row">
+          <div><label>出差城市</label><input type="text" id="ctxCity" value="北京" /></div>
+          <div><label>金额（元）</label><input type="number" id="ctxAmount" value="580" /></div>
+          <div><label>住宿晚数</label><input type="number" id="ctxNights" value="1" /></div>
+        </div>
+        <button class="btn" id="auditBtn">执行审核</button>
+      </div>
+      <div class="card" id="auditResultCard" style="display:none">
+        <h3>审核结果 <span id="auditConclusion"></span></h3>
+        <div id="auditResults" style="margin-top:6px"></div>
+      </div>
+    </section>
+
+    <!-- 发票清单 -->
+    <section id="tab-list" class="panel">
+      <div class="card">
+        <h3>发票清单 <span class="muted" id="listStats"></span></h3>
+        <div class="row actions" style="margin-bottom:6px">
+          <button class="btn ghost sm" id="dedupeBtn">检测重复</button>
+          <button class="btn ghost sm" id="resetListBtn">重置示例</button>
+        </div>
+        <p class="muted" id="dupHint"></p>
+        <div id="invoiceList" style="margin-top:10px"></div>
+      </div>
+    </section>
+
+    <!-- 报销组合 -->
+    <section id="tab-combine" class="panel">
+      <div class="card">
+        <h3>按目标金额选择最优组合</h3>
+        <p class="sub">在发票清单中枚举子集，优先落入容差范围，其次更接近目标金额。</p>
+        <div class="row">
+          <div><label>目标金额（元）</label><input type="number" id="combTarget" value="1000" /></div>
+          <div><label>允许误差（元）</label><input type="number" id="combTolerance" value="0" /></div>
+        </div>
+        <button class="btn" id="combineBtn">计算组合</button>
+      </div>
+      <div class="card" id="combineResultCard" style="display:none">
+        <h3>组合结果 <span id="combineSummary"></span></h3>
+        <div id="combineResult" style="margin-top:8px"></div>
+        <button class="btn ghost" id="exportCsvBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+          导出 CSV 台账
+        </button>
+      </div>
+    </section>
+
+    <!-- 报销规则 -->
+    <section id="tab-rules" class="panel">
+      <div class="card">
+        <h3>报销规则 <span class="muted" id="ruleStats"></span></h3>
+        <input type="text" id="ruleSearch" placeholder="搜索规则关键词，如：住宿" />
+        <div id="ruleList" style="margin-top:12px"></div>
+      </div>
+    </section>
+
+    <!-- 智能问答 -->
+    <section id="tab-chat" class="panel">
+      <div class="card">
+        <h3>向报销助手提问</h3>
+        <p class="sub">真实系统接入大模型并结合规则库作答；此处为预设演示。可试：住宿标准 / 报销时效 / 发票要求。</p>
+        <div id="chatLog"></div>
+        <textarea id="chatInput" placeholder="例如：差旅费的住宿标准是什么？"></textarea>
+        <div class="row actions">
+          <button class="btn" id="chatBtn">发送</button>
+          <span class="muted">Ctrl / ⌘ + Enter 发送</span>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-/* ============ 演示数据 ============ */
+/* ================= 演示数据 ================= */
 const CITY_TIER = (() => {
   const t1 = ["北京", "上海", "广州", "深圳"];
   const t2 = ["成都","杭州","重庆","武汉","西安","苏州","天津","南京","长沙","郑州","东莞","青岛","沈阳","宁波","昆明"];
-  const m = {};
-  t1.forEach((c) => m[c] = 1);
-  t2.forEach((c) => m[c] = 2);
-  return m;
+  const m = {}; t1.forEach((c) => m[c] = 1); t2.forEach((c) => m[c] = 2); return m;
 })();
 const HOTEL_LIMIT = { 1: 600, 2: 500, 3: 400 };
-function normCity(c){ return (c||"").replace(/(特别行政区|自治区|地区|市|区|县)$/,""); }
-function cityTier(c){ return CITY_TIER[normCity(c)] || 3; }
-function hotelLimit(c){ return HOTEL_LIMIT[cityTier(c)]; }
+const normCity = (c) => (c || "").replace(/(特别行政区|自治区|地区|市|区|县)$/, "");
+const cityTier = (c) => CITY_TIER[normCity(c)] || 3;
+const hotelLimit = (c) => HOTEL_LIMIT[cityTier(c)];
 
 let SEQ = 0;
-function makeInvoice(code, no, date, amount, buyer, seller, item){
+function makeInvoice(code, no, date, amount, buyer, seller, item) {
   SEQ++;
-  return {
-    id: "demo-" + SEQ,
-    fields: {
-      "通用字段": { "发票代码": code, "发票号码": no, "开票日期": date, "金额": (amount/1.06).toFixed(2), "税额": (amount-amount/1.06).toFixed(2), "价税合计": String(amount) },
-      "购买方信息": { "名称": buyer },
-      "销售方信息": { "名称": seller },
-      "商品信息": { "商品名称": item },
-    }
-  };
+  return { id: "demo-" + SEQ, fields: {
+    "通用字段": { "发票代码": code, "发票号码": no, "开票日期": date, "金额": (amount/1.06).toFixed(2), "税额": (amount-amount/1.06).toFixed(2), "价税合计": String(amount) },
+    "购买方信息": { "名称": buyer }, "销售方信息": { "名称": seller }, "商品信息": { "商品名称": item },
+  }};
 }
-function defaultInvoices(){
+function defaultInvoices() {
   SEQ = 0;
+  const b = "小荷包科技（北京）有限公司";
   return [
-    makeInvoice("011002000411","23876501","2026-10-01",580,"小荷包科技（北京）有限公司","北京雍和酒店管理有限公司","住宿服务"),
-    makeInvoice("031002000411","23876502","2026-09-28",480,"小荷包科技（北京）有限公司","上海静安假日酒店","住宿服务"),
-    makeInvoice("021002000411","23876503","2026-09-27",553.5,"小荷包科技（北京）有限公司","中国铁路12306","铁路旅客运输"),
-    makeInvoice("011002000411","23876504","2026-10-02",100,"小荷包科技（北京）有限公司","北京某餐饮有限公司","餐饮服务"),
-    makeInvoice("011002000411","23876505","2026-09-30",320,"小荷包科技（北京）有限公司","晨光文具旗舰店","办公用品"),
-    makeInvoice("011002000411","23876506","2026-10-03",88,"小荷包科技（北京）有限公司","北京出租车","市内交通"),
-    makeInvoice("011002000411","23876501","2026-10-01",580,"小荷包科技（北京）有限公司","北京雍和酒店管理有限公司","住宿服务"),
+    makeInvoice("011002000411","23876501","2026-10-01",580,b,"北京雍和酒店管理有限公司","住宿服务"),
+    makeInvoice("031002000411","23876502","2026-09-28",480,b,"上海静安假日酒店","住宿服务"),
+    makeInvoice("021002000411","23876503","2026-09-27",553.5,b,"中国铁路12306","铁路旅客运输"),
+    makeInvoice("011002000411","23876504","2026-10-02",100,b,"北京某餐饮有限公司","餐饮服务"),
+    makeInvoice("011002000411","23876505","2026-09-30",320,b,"晨光文具旗舰店","办公用品"),
+    makeInvoice("011002000411","23876506","2026-10-03",88,b,"北京出租车","市内交通"),
+    makeInvoice("011002000411","23876501","2026-10-01",580,b,"北京雍和酒店管理有限公司","住宿服务"),
   ];
 }
-
 const RULES = [
   ["审核制度","适用范围","1.2","适用费用","与公司经营活动直接相关的差旅、业务招待、采购、培训、通讯、加班餐费等可报销。"],
   ["审核制度","审核原则","2.1","真实性","所有报销须基于真实业务，禁止虚构或拆分发票。"],
@@ -260,208 +400,202 @@ const RULES = [
 
 let invoices = defaultInvoices();
 
-/* ============ 通用工具 ============ */
-const $ = (id) => document.getElementById(id);
-function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1800); }
-function amtOf(inv){ const v=(inv.fields["通用字段"]||{})["价税合计"]; const n=parseFloat(String(v).replace(/,/g,"")); return isNaN(n)?null:n; }
-function money(n){ return (Math.round(n*100)/100).toFixed(2); }
+const PAGE_META = {
+  invoice: ["发票识别", "上传图片或 PDF，自动提取发票字段"],
+  audit:   ["智能审核", "依据报销规则逐条校验发票"],
+  list:    ["发票清单", "管理已识别的发票，检测重复"],
+  combine: ["报销组合", "按目标金额选择最优发票子集"],
+  rules:   ["报销规则", "浏览与检索公司报销制度"],
+  chat:    ["智能问答", "就报销政策提问，获得依据与结论"],
+};
 
-document.querySelectorAll("nav button").forEach((btn) => {
+/* ================= 工具 ================= */
+const $ = (id) => document.getElementById(id);
+const money = (n) => (Math.round(n * 100) / 100).toFixed(2);
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 1800); }
+function amtOf(inv) { const v = (inv.fields["通用字段"] || {})["价税合计"]; const n = parseFloat(String(v).replace(/,/g, "")); return isNaN(n) ? null : n; }
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+/* ================= 导航 ================= */
+document.querySelectorAll(".nav button").forEach((btn) => {
   btn.onclick = () => {
-    document.querySelectorAll("nav button").forEach((b)=>b.classList.remove("active"));
-    document.querySelectorAll(".panel").forEach((p)=>p.classList.remove("active"));
+    document.querySelectorAll(".nav button").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
     btn.classList.add("active");
-    $("tab-"+btn.dataset.tab).classList.add("active");
-    if (btn.dataset.tab==="list") renderList();
-    if (btn.dataset.tab==="rules") renderRules();
+    $("tab-" + btn.dataset.tab).classList.add("active");
+    const [t, d] = PAGE_META[btn.dataset.tab];
+    $("pageTitle").textContent = t; $("pageDesc").textContent = d;
+    if (btn.dataset.tab === "list") renderList();
+    if (btn.dataset.tab === "rules") renderRules();
   };
 });
 
-/* ============ 发票识别 ============ */
+/* ================= 统计 ================= */
+function renderStats() {
+  const total = invoices.reduce((s, i) => s + (amtOf(i) || 0), 0);
+  const groups = {};
+  invoices.forEach((inv) => { const c = inv.fields["通用字段"] || {}; const sig = [c["发票代码"], c["发票号码"], c["价税合计"]].join("|"); groups[sig] = (groups[sig] || 0) + 1; });
+  const dup = Object.values(groups).filter((n) => n > 1).reduce((s, n) => s + (n - 1), 0);
+  $("stCount").textContent = invoices.length;
+  $("stTotal").innerHTML = money(total) + "<em>元</em>";
+  $("stRules").textContent = RULES.length;
+  $("stDup").textContent = dup;
+}
+
+/* ================= 发票识别 ================= */
 $("recognizeBtn").onclick = () => {
   $("fieldsCard").style.display = "block";
   $("fieldsLoading").style.display = "block";
   $("fieldsOut").textContent = "";
-  $("engineTag").textContent = "OCR + LLM 识别中...";
-  const sample = invoices.find((i)=>i.fields["商品信息"]["商品名称"]==="住宿服务") || invoices[0];
+  $("engineTag").textContent = "OCR + LLM 识别中";
+  const sample = invoices.find((i) => i.fields["商品信息"]["商品名称"] === "住宿服务") || invoices[0];
   setTimeout(() => {
     $("fieldsLoading").style.display = "none";
     $("engineTag").textContent = "engine: ocr+llm";
     $("fieldsOut").textContent = JSON.stringify(sample.fields, null, 2);
     window.__lastFields = sample.fields;
-    toast("识别完成（演示数据）");
+    toast("识别完成");
   }, 900);
 };
-$("toAuditBtn").onclick = () => {
-  document.querySelector('nav button[data-tab="audit"]').click();
-};
+$("toAuditBtn").onclick = () => document.querySelector('.nav button[data-tab="audit"]').click();
 
-/* ============ 智能审核 ============ */
-function toDate(s){ const m=/(\d{4})[-/年](\d{1,2})[-/月](\d{1,2})/.exec(s||""); return m? new Date(+m[1], +m[2]-1, +m[3]) : null; }
+/* ================= 智能审核 ================= */
+function toDate(s) { const m = /(\d{4})[-/年](\d{1,2})[-/月](\d{1,2})/.exec(s || ""); return m ? new Date(+m[1], +m[2]-1, +m[3]) : null; }
 $("auditBtn").onclick = () => {
   const fields = window.__lastFields || invoices[0].fields;
   const city = $("ctxCity").value, amount = parseFloat($("ctxAmount").value), nights = parseFloat($("ctxNights").value);
-  const results = [];
-  const common = fields["通用字段"] || {};
-  const missing = ["发票号码","开票日期","价税合计"].filter((k)=>!common[k] || common[k]==="无");
-  results.push({ title:"发票要素完整", id:"审核制度_票据规范_4.1", status: missing.length?"fail":"pass",
-    msg: missing.length? "缺少要素："+missing.join("、"): "发票号码、开票日期、价税合计齐全" });
-
+  const results = [], common = fields["通用字段"] || {};
+  const missing = ["发票号码","开票日期","价税合计"].filter((k) => !common[k] || common[k] === "无");
+  results.push({ title: "发票要素完整", id: "审核制度_票据规范_4.1", status: missing.length ? "fail" : "pass",
+    msg: missing.length ? "缺少要素：" + missing.join("、") : "发票号码、开票日期、价税合计齐全" });
   const d = toDate(common["开票日期"]);
-  if (d){
-    const days = Math.floor((new Date(2026,9,9) - d)/86400000);
-    results.push({ title:"报销时效性", id:"审核制度_审核原则_2.3", status: days<=30?"pass":"fail",
-      msg: `开票日期距今 ${days} 天，`+(days<=30?"在 30 天内":"已超过 30 天时效") });
-  } else {
-    results.push({ title:"报销时效性", id:"审核制度_审核原则_2.3", status:"skip", msg:"无法解析开票日期" });
-  }
-
-  if (city && !isNaN(amount)){
-    const limit = hotelLimit(city);
-    const label = ["","一线城市","二线城市","其余地区"][cityTier(city)];
-    if (nights>0){
-      const per = amount/nights, ok = per<=limit;
-      results.push({ title:"住宿费限额", id:"差旅费_住宿标准_T4.1", status: ok?"pass":"fail",
-        msg:`${city}（${label}）限额 ${limit} 元/晚，实际 ${money(per)} 元/晚（${nights} 晚）` });
-    } else {
-      results.push({ title:"住宿费限额", id:"差旅费_住宿标准_T4.1", status: amount<=limit?"warn":"fail",
-        msg:`${city}（${label}）限额 ${limit} 元/晚，金额 ${money(amount)} 元，未提供晚数` });
-    }
-  } else {
-    results.push({ title:"住宿费限额", id:"差旅费_住宿标准_T4.1", status:"skip", msg:"未提供城市/金额" });
-  }
-
-  const failed = results.filter((r)=>r.status==="fail").length;
-  const warned = results.filter((r)=>r.status==="warn").length;
-  const concl = failed? "不通过" : warned? "需人工复核" : "通过";
-  const cls = concl==="通过"?"pass": concl==="不通过"?"fail":"warn";
+  if (d) { const days = Math.floor((new Date(2026,9,9) - d) / 86400000);
+    results.push({ title: "报销时效性", id: "审核制度_审核原则_2.3", status: days <= 30 ? "pass" : "fail",
+      msg: `开票日期距今 ${days} 天，` + (days <= 30 ? "在 30 天内" : "已超过 30 天时效") });
+  } else results.push({ title: "报销时效性", id: "审核制度_审核原则_2.3", status: "skip", msg: "无法解析开票日期" });
+  if (city && !isNaN(amount)) {
+    const limit = hotelLimit(city), label = ["","一线城市","二线城市","其余地区"][cityTier(city)];
+    if (nights > 0) { const per = amount / nights;
+      results.push({ title: "住宿费限额", id: "差旅费_住宿标准_T4.1", status: per <= limit ? "pass" : "fail",
+        msg: `${city}（${label}）限额 ${limit} 元/晚，实际 ${money(per)} 元/晚（${nights} 晚）` });
+    } else results.push({ title: "住宿费限额", id: "差旅费_住宿标准_T4.1", status: amount <= limit ? "warn" : "fail",
+      msg: `${city}（${label}）限额 ${limit} 元/晚，金额 ${money(amount)} 元，未提供晚数` });
+  } else results.push({ title: "住宿费限额", id: "差旅费_住宿标准_T4.1", status: "skip", msg: "未提供城市/金额" });
+  const failed = results.filter((r) => r.status === "fail").length, warned = results.filter((r) => r.status === "warn").length;
+  const concl = failed ? "不通过" : warned ? "需人工复核" : "通过";
+  const cls = concl === "通过" ? "pass" : concl === "不通过" ? "fail" : "warn";
   $("auditResultCard").style.display = "block";
   $("auditConclusion").innerHTML = `<span class="badge ${cls}">${concl}</span>`;
-  $("auditResults").innerHTML = results.map((r)=>`
+  $("auditResults").innerHTML = results.map((r) => `
     <div class="rule">
       <span class="badge ${r.status}">${r.status.toUpperCase()}</span>
-      <b>${r.title}</b> <small>${r.id}</small>
-      <div>${r.msg}</div>
+      <div class="grow"><div class="title">${r.title}</div><div class="desc">${r.msg}</div><div class="meta">${r.id}</div></div>
     </div>`).join("");
 };
 
-/* ============ 发票清单 ============ */
-function renderList(){
+/* ================= 发票清单 ================= */
+function renderList() {
   $("listStats").textContent = `（共 ${invoices.length} 张）`;
-  $("invoiceList").innerHTML = invoices.map((inv)=>{
-    const c = inv.fields["通用字段"]||{}, s = inv.fields["销售方信息"]||{};
-    return `<div class="rule">
-      <b>${c["发票号码"]||"（无号码）"}</b> <small>${c["开票日期"]||""}</small>
-      <span class="badge pill">${c["价税合计"]||"?"} 元</span>
-      <small>${s["名称"]||""}</small>
-      <button data-del="${inv.id}" style="float:right;border:none;background:none;color:#dc2626;cursor:pointer">删除</button>
+  $("invoiceList").innerHTML = invoices.map((inv) => {
+    const c = inv.fields["通用字段"] || {}, s = inv.fields["销售方信息"] || {};
+    return `<div class="item">
+      <div class="grow">
+        <div class="title">${c["发票号码"] || "（无号码）"} <span class="meta">${c["开票日期"] || ""}</span></div>
+        <div class="meta">${s["名称"] || ""}</div>
+      </div>
+      <span class="amt">${c["价税合计"] || "?"} 元</span>
+      <button class="icon-btn" data-del="${inv.id}" title="删除">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
+      </button>
     </div>`;
-  }).join("") || "<p class='muted'>暂无发票</p>";
-  document.querySelectorAll("[data-del]").forEach((b)=>{
-    b.onclick = () => { invoices = invoices.filter((i)=>i.id!==b.dataset.del); renderList(); toast("已删除"); };
+  }).join("") || "<div class='empty'>暂无发票，请先在「发票识别」上传</div>";
+  document.querySelectorAll("[data-del]").forEach((b) => {
+    b.onclick = () => { invoices = invoices.filter((i) => i.id !== b.dataset.del); renderList(); renderStats(); toast("已删除"); };
   });
 }
-$("resetListBtn").onclick = () => { invoices = defaultInvoices(); renderList(); $("dupHint").textContent=""; toast("示例已重置"); };
+$("resetListBtn").onclick = () => { invoices = defaultInvoices(); renderList(); renderStats(); $("dupHint").textContent = ""; toast("示例已重置"); };
 $("dedupeBtn").onclick = () => {
   const groups = {};
-  invoices.forEach((inv)=>{ const c=inv.fields["通用字段"]||{}; const sig=[c["发票代码"],c["发票号码"],c["价税合计"]].join("|"); (groups[sig]=groups[sig]||[]).push(inv); });
-  const dups = Object.values(groups).filter((g)=>g.length>1);
-  if (!dups.length){ $("dupHint").textContent="未发现重复发票"; return; }
-  $("dupHint").innerHTML = dups.map((g)=>{ const c=g[0].fields["通用字段"]; return `重复 ${g.length} 张：号码 ${c["发票号码"]}，金额 ${c["价税合计"]}`; }).join("<br>");
+  invoices.forEach((inv) => { const c = inv.fields["通用字段"] || {}; const sig = [c["发票代码"], c["发票号码"], c["价税合计"]].join("|"); (groups[sig] = groups[sig] || []).push(inv); });
+  const dups = Object.values(groups).filter((g) => g.length > 1);
+  if (!dups.length) { $("dupHint").textContent = "未发现重复发票"; return; }
+  $("dupHint").innerHTML = dups.map((g) => { const c = g[0].fields["通用字段"]; return `<span class="badge warn">重复 ${g.length} 张</span> 号码 ${c["发票号码"]}，金额 ${c["价税合计"]}`; }).join("<br>");
 };
 
-/* ============ 报销组合（精确枚举） ============ */
-function bestCombo(items, target, tol){
-  const n = items.length;
-  if (n > 22) return null; // 演示规模上限
-  const cents = items.map((x)=>Math.round(x.amount*100));
-  const tgt = Math.round(target*100), t = Math.round(tol*100);
-  let best=null;
-  for (let mask=0; mask<(1<<n); mask++){
-    let sum=0, cnt=0;
-    for (let i=0;i<n;i++) if (mask&(1<<i)){ sum+=cents[i]; cnt++; }
-    const diff = sum - tgt, dist = Math.abs(diff);
-    const out = dist<=t?0:1, extra = out? dist-t: dist;
-    const score = [out, extra, diff<0?1:0, cnt];
-    if (!best || cmp(score,best.score)<0) best = { mask, sum, diff, cnt, score };
+/* ================= 报销组合 ================= */
+function cmp(a, b) { for (let i = 0; i < a.length; i++) { if (a[i] !== b[i]) return a[i] - b[i]; } return 0; }
+function bestCombo(items, target, tol) {
+  const n = items.length; if (n > 22) return null;
+  const cents = items.map((x) => Math.round(x.amount * 100));
+  const tgt = Math.round(target * 100), t = Math.round(tol * 100);
+  let best = null;
+  for (let mask = 0; mask < (1 << n); mask++) {
+    let sum = 0, cnt = 0;
+    for (let i = 0; i < n; i++) if (mask & (1 << i)) { sum += cents[i]; cnt++; }
+    const diff = sum - tgt, dist = Math.abs(diff), out = dist <= t ? 0 : 1, extra = out ? dist - t : dist;
+    const score = [out, extra, diff < 0 ? 1 : 0, cnt];
+    if (!best || cmp(score, best.score) < 0) best = { mask, sum, diff, cnt, score };
   }
   return best;
 }
-function cmp(a,b){ for (let i=0;i<a.length;i++){ if (a[i]!==b[i]) return a[i]-b[i]; } return 0; }
-
 $("combineBtn").onclick = () => {
-  const target = parseFloat($("combTarget").value);
-  const tol = parseFloat($("combTolerance").value) || 0;
-  if (!target){ toast("请输入目标金额"); return; }
-  const usable = invoices.map((inv)=>({ inv, amount: amtOf(inv) })).filter((x)=>x.amount!=null);
-  if (!usable.length){ toast("没有可用发票"); return; }
-  if (usable.length > 22){ toast("演示版最多支持 22 张，后端可处理更大规模"); return; }
+  const target = parseFloat($("combTarget").value), tol = parseFloat($("combTolerance").value) || 0;
+  if (!target) { toast("请输入目标金额"); return; }
+  const usable = invoices.map((inv) => ({ inv, amount: amtOf(inv) })).filter((x) => x.amount != null);
+  if (!usable.length) { toast("没有可用发票"); return; }
+  if (usable.length > 22) { toast("演示版最多支持 22 张，后端可处理更大规模"); return; }
   const best = bestCombo(usable, target, tol);
-  const chosen = usable.filter((_,i)=> best.mask & (1<<i)).map((x)=>x.inv);
-
+  const chosen = usable.filter((_, i) => best.mask & (1 << i)).map((x) => x.inv);
   $("combineResultCard").style.display = "block";
-  $("combineSummary").innerHTML =
-    `<span class="badge ${best.diff===0?"pass":"warn"}">合计 ${money(best.sum/100)} 元，差 ${money(best.diff/100)} 元，共 ${best.cnt} 张</span>`;
-  $("combineResult").innerHTML = chosen.map((inv)=>{ const c=inv.fields["通用字段"]; return `
-    <div class="rule"><b>${c["发票号码"]}</b> <small>${c["开票日期"]}</small>
-    <span class="badge pill">${c["价税合计"]} 元</span> <small>${inv.fields["销售方信息"]["名称"]}</small></div>`; }).join("") || "<p class='muted'>无可选组合</p>";
+  $("combineSummary").innerHTML = `<span class="badge ${best.diff === 0 ? "pass" : "warn"}">合计 ${money(best.sum / 100)} 元 · 差 ${money(best.diff / 100)} 元 · ${best.cnt} 张</span>`;
+  $("combineResult").innerHTML = chosen.map((inv) => { const c = inv.fields["通用字段"];
+    return `<div class="item"><div class="grow"><div class="title">${c["发票号码"]} <span class="meta">${c["开票日期"]}</span></div><div class="meta">${inv.fields["销售方信息"]["名称"]}</div></div><span class="amt">${c["价税合计"]} 元</span></div>`; }).join("") || "<div class='empty'>无可选组合</div>";
   window.__combo = chosen;
 };
-
 $("exportCsvBtn").onclick = () => {
-  const rows = window.__combo || [];
-  if (!rows.length){ toast("请先计算组合"); return; }
+  const rows = window.__combo || []; if (!rows.length) { toast("请先计算组合"); return; }
   const header = ["序号","发票代码","发票号码","开票日期","购买方","销售方","商品名称","价税合计"];
-  const lines = [header.join(",")];
-  let total = 0;
-  rows.forEach((inv,i)=>{
-    const c=inv.fields["通用字段"], s=inv.fields["销售方信息"], g=inv.fields["商品信息"];
-    total += amtOf(inv)||0;
-    lines.push([i+1,c["发票代码"],c["发票号码"],c["开票日期"],inv.fields["购买方信息"]["名称"],s["名称"],g["商品名称"],c["价税合计"]]
-      .map((x)=>`"${String(x).replace(/"/g,'""')}"`).join(","));
-  });
+  const lines = [header.join(",")]; let total = 0;
+  rows.forEach((inv, i) => { const c = inv.fields["通用字段"], s = inv.fields["销售方信息"], g = inv.fields["商品信息"]; total += amtOf(inv) || 0;
+    lines.push([i+1,c["发票代码"],c["发票号码"],c["开票日期"],inv.fields["购买方信息"]["名称"],s["名称"],g["商品名称"],c["价税合计"]].map((x) => `"${String(x).replace(/"/g, '""')}"`).join(",")); });
   lines.push(`"","","","","","","合计",${money(total)}`);
-  const blob = new Blob(["\ufeff"+lines.join("\r\n")], { type:"text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a"); a.href=url; a.download="报销台账.csv"; a.click();
-  URL.revokeObjectURL(url);
+  const blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "报销台账.csv"; a.click(); URL.revokeObjectURL(url);
   toast("已导出 CSV");
 };
 
-/* ============ 报销规则 ============ */
-function renderRules(){
+/* ================= 报销规则 ================= */
+function renderRules() {
   const kw = $("ruleSearch").value.trim().toLowerCase();
-  const list = RULES.filter((r)=> !kw || [r.category,r.subcategory,r.title,r.content].join(" ").toLowerCase().includes(kw));
+  const list = RULES.filter((r) => !kw || [r.category, r.subcategory, r.title, r.content].join(" ").toLowerCase().includes(kw));
   $("ruleStats").textContent = `（共 ${list.length} 条）`;
-  $("ruleList").innerHTML = list.map((r)=>`
-    <div class="rule"><b>【${r.category} / ${r.subcategory}】${r.title}</b> <small>${r.clause_id}</small>
-    <div>${r.content}</div></div>`).join("") || "<p class='muted'>无匹配规则</p>";
+  $("ruleList").innerHTML = list.map((r) => `
+    <div class="rule"><div class="grow"><div class="title">【${r.category} / ${r.subcategory}】${r.title}</div>
+    <div class="desc">${esc(r.content)}</div><div class="meta">${r.clause_id}</div></div></div>`).join("") || "<div class='empty'>无匹配规则</div>";
 }
 $("ruleSearch").oninput = renderRules;
 
-/* ============ 智能问答（演示预设） ============ */
+/* ================= 智能问答 ================= */
 const ANSWERS = [
-  { k: ["住宿","酒店"], a: "根据《差旅费 / 住宿标准 T4.1》：一线城市 600 元/晚，二线城市 500 元/晚，其余地区 400 元/晚。北京属一线城市，故限额 600 元/晚。" },
-  { k: ["时效","多久","期限","30"], a: "根据《审核制度 / 审核原则 2.3》：费用发生后 30 天内需提交系统，逾期视为自动放弃；差旅费另需返程后五个工作日内办理。" },
-  { k: ["发票","票据","要求"], a: "根据《审核制度 / 票据规范 4.1》：须为国家税务局监制的增值税发票，抬头、税号、项目、金额完整；遗失需填写《票据遗失说明》。" },
-  { k: ["组合","目标金额"], a: "报销组合会在发票清单中枚举子集，优先落在你的容差范围内，其次更接近目标金额。可在「报销组合」页输入目标金额试用。" },
+  { k: ["住宿", "酒店"], a: "根据《差旅费 / 住宿标准 T4.1》：一线城市 600 元/晚，二线城市 500 元/晚，其余地区 400 元/晚。北京属一线城市，故限额 600 元/晚。" },
+  { k: ["时效", "多久", "期限", "30"], a: "根据《审核制度 / 审核原则 2.3》：费用发生后 30 天内需提交系统，逾期视为自动放弃；差旅费另需返程后五个工作日内办理。" },
+  { k: ["发票", "票据", "要求"], a: "根据《审核制度 / 票据规范 4.1》：须为国家税务局监制的增值税发票，抬头、税号、项目、金额完整；遗失需填写《票据遗失说明》。" },
+  { k: ["组合", "目标金额"], a: "报销组合会在发票清单中枚举子集，优先落在你的容差范围内，其次更接近目标金额。可在「报销组合」页输入目标金额试用。" },
 ];
-function answer(q){
-  for (const item of ANSWERS) if (item.k.some((k)=>q.includes(k))) return item.a;
-  return "本演示为前端预设问答。真实系统会接入大模型，并结合你的报销规则库作答（后端 /api/chat/stream）。";
-}
+const answerFor = (q) => (ANSWERS.find((it) => it.k.some((k) => q.includes(k))) || {}).a || "本演示为前端预设问答。真实系统会接入大模型，并结合你的报销规则库作答（后端 /api/chat/stream）。";
 $("chatBtn").onclick = () => {
   const q = $("chatInput").value.trim(); if (!q) return;
   const log = $("chatLog");
-  log.insertAdjacentHTML("beforeend", `<div class="msg user">${q}</div>`);
+  log.insertAdjacentHTML("beforeend", `<div class="msg user">${esc(q)}</div>`);
   $("chatInput").value = "";
-  const bubble = document.createElement("div"); bubble.className="msg assistant"; log.appendChild(bubble);
-  const text = answer(q); let i=0;
-  const timer = setInterval(()=>{ bubble.textContent = text.slice(0, i+=2); log.scrollTop = log.scrollHeight; if (i>=text.length) clearInterval(timer); }, 18);
+  const bubble = document.createElement("div"); bubble.className = "msg assistant"; bubble.textContent = "正在思考…"; log.appendChild(bubble);
+  log.scrollTop = log.scrollHeight;
+  const text = answerFor(q); let i = 0; bubble.textContent = "";
+  const timer = setInterval(() => { bubble.textContent = text.slice(0, i += 2); log.scrollTop = log.scrollHeight; if (i >= text.length) clearInterval(timer); }, 16);
 };
-$("chatInput").addEventListener("keydown", (e)=>{ if (e.key==="Enter" && (e.ctrlKey||e.metaKey)) $("chatBtn").click(); });
+$("chatInput").addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) $("chatBtn").click(); });
 
-renderList(); renderRules();
+renderStats(); renderList(); renderRules();
 </script>
 </body>
 </html>
