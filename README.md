@@ -35,13 +35,24 @@ baoxiao.Assistant/
 │   │   └── city_tier.py         # 城市分级与住宿限额
 │   ├── services/            # 业务服务层（含 invoices.json 存储）
 │   └── routers/             # API 路由：health/invoices/rules/audit/combination/ledger/chat
-├── web/index.html           # 单文件 Web 前端（无需构建）
+├── web/
+│   ├── index.html           # 连接后端的单文件前端（无需构建）
+│   └── demo.html            # 自包含演示页（内置示例数据，可离线打开）
 ├── rules/default_rules.txt  # 默认报销规则（| 分隔）
 ├── data/                    # 上传文件与输出
 ├── tests/test_api.py        # API 冒烟测试
 ├── requirements.txt
 └── run.py
 ```
+
+## 网页演示（无需后端）
+
+`web/demo.html` 是一个**完全自包含的演示页**：内置示例发票与规则，纯前端运行，可直接双击用浏览器打开，也可由后端在 `/demo` 提供。
+
+- 直接打开：`web/demo.html`
+- 或启动后端后访问：`http://127.0.0.1:8000/demo`
+
+演示页覆盖全部交互：发票识别（模拟）、智能审核、清单去重、按目标金额最优组合、CSV 台账导出、规则浏览与预设问答。
 
 ## 快速开始
 

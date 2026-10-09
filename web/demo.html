@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>小荷包报销助手 · 在线演示</title>
+<style>
+  :root {
+    --bg: #f4f6fb; --card: #fff; --ink: #1f2937; --muted: #6b7280;
+    --brand: #2563eb; --brand-dark: #1d4ed8; --violet: #7c3aed;
+    --ok: #16a34a; --warn: #d97706; --fail: #dc2626; --line: #e5e7eb;
+    --shadow: 0 1px 3px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.05);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+    background: var(--bg); color: var(--ink);
+  }
+  header {
+    background: linear-gradient(135deg, var(--brand), var(--violet));
+    color: #fff; padding: 22px 28px; display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px;
+  }
+  header h1 { margin: 0; font-size: 21px; letter-spacing: .5px; }
+  header p { margin: 6px 0 0; font-size: 13px; opacity: .88; }
+  .demo-badge {
+    background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.4);
+    padding: 5px 12px; border-radius: 999px; font-size: 12px;
+  }
+  nav {
+    display: flex; gap: 4px; padding: 0 20px; background: var(--card);
+    border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5;
+    overflow-x: auto;
+  }
+  nav button {
+    border: none; background: none; padding: 14px 15px; cursor: pointer;
+    font-size: 14px; color: var(--muted); border-bottom: 2px solid transparent; white-space: nowrap;
+  }
+  nav button.active { color: var(--brand); border-bottom-color: var(--brand); font-weight: 600; }
+  main { max-width: 980px; margin: 22px auto; padding: 0 16px; }
+  .panel { display: none; animation: fade .25s ease; }
+  .panel.active { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow);
+  }
+  .card h3 { margin: 0 0 12px; font-size: 15px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  input[type=text], input[type=number], textarea, select {
+    width: 100%; padding: 9px 10px; border: 1px solid var(--line);
+    border-radius: 8px; font-size: 14px; font-family: inherit;
+  }
+  textarea { min-height: 84px; resize: vertical; }
+  button.primary {
+    background: var(--brand); color: #fff; border: none; border-radius: 8px;
+    padding: 10px 18px; font-size: 14px; cursor: pointer; margin-top: 14px;
+    transition: background .15s;
+  }
+  button.primary:hover { background: var(--brand-dark); }
+  button.ghost {
+    background: #eef2ff; color: var(--brand); border: 1px solid #c7d2fe;
+    border-radius: 8px; padding: 9px 16px; font-size: 14px; cursor: pointer; margin-top: 14px;
+  }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+  .row > div { flex: 1; min-width: 150px; }
+  pre {
+    background: #0f172a; color: #e2e8f0; padding: 14px; border-radius: 8px;
+    overflow: auto; font-size: 12px; max-height: 340px; white-space: pre-wrap;
+  }
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; }
+  .badge.pass { background: #dcfce7; color: var(--ok); }
+  .badge.fail { background: #fee2e2; color: var(--fail); }
+  .badge.warn { background: #fef3c7; color: var(--warn); }
+  .badge.skip { background: #eef2f7; color: var(--muted); }
+  .badge.pill { background: #eef2ff; color: var(--brand); }
+  .rule { border-bottom: 1px solid var(--line); padding: 9px 0; font-size: 13px; }
+  .rule:last-child { border-bottom: none; }
+  .rule small { color: var(--muted); }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { border-bottom: 1px solid var(--line); padding: 8px 6px; text-align: left; }
+  th { color: var(--muted); font-weight: 600; }
+  #chatLog { min-height: 200px; max-height: 400px; overflow: auto; margin-bottom: 10px; }
+  .msg { padding: 9px 13px; border-radius: 10px; margin: 7px 0; font-size: 14px; white-space: pre-wrap; line-height: 1.5; }
+  .msg.user { background: #dbeafe; margin-left: 16%; }
+  .msg.assistant { background: #f3f4f6; margin-right: 8%; }
+  .muted { color: var(--muted); font-size: 12px; }
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: #111827; color: #fff; padding: 11px 20px; border-radius: 10px; font-size: 13px;
+    opacity: 0; pointer-events: none; transition: all .25s; z-index: 50;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .skeleton { height: 12px; border-radius: 6px; background: linear-gradient(90deg,#eef2f7,#e2e8f0,#eef2f7); background-size: 200% 100%; animation: sk 1s infinite; }
+  @keyframes sk { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>小荷包报销助手</h1>
+    <p>发票识别 · 智能审核 · 清单去重 · 最优组合 · 台账导出 · 智能问答</p>
+  </div>
+  <span class="demo-badge">演示模式 · 内置示例数据</span>
+</header>
+
+<nav>
+  <button class="active" data-tab="invoice">发票识别</button>
+  <button data-tab="audit">智能审核</button>
+  <button data-tab="list">发票清单</button>
+  <button data-tab="combine">报销组合</button>
+  <button data-tab="rules">报销规则</button>
+  <button data-tab="chat">智能问答</button>
+</nav>
+
+<main>
+  <!-- 发票识别 -->
+  <section id="tab-invoice" class="panel active">
+    <div class="card">
+      <h3>上传发票（演示：使用示例发票）</h3>
+      <p class="muted">真实系统中此处支持 JPG/PNG/PDF 上传，后端以 PaddleOCR 取字并由大模型抽取字段。</p>
+      <button class="primary" id="recognizeBtn">识别示例发票</button>
+    </div>
+    <div class="card" id="fieldsCard" style="display:none">
+      <h3>结构化字段 <span class="badge pill" id="engineTag"></span></h3>
+      <div id="fieldsLoading" class="skeleton" style="display:none"></div>
+      <pre id="fieldsOut"></pre>
+      <button class="ghost" id="toAuditBtn">送到智能审核</button>
+    </div>
+  </section>
+
+  <!-- 智能审核 -->
+  <section id="tab-audit" class="panel">
+    <div class="card">
+      <h3>审核上下文</h3>
+      <div class="row">
+        <div><label>出差城市</label><input type="text" id="ctxCity" value="北京" /></div>
+        <div><label>金额（元）</label><input type="number" id="ctxAmount" value="580" /></div>
+        <div><label>住宿晚数</label><input type="number" id="ctxNights" value="1" /></div>
+      </div>
+      <button class="primary" id="auditBtn">执行审核</button>
+    </div>
+    <div class="card" id="auditResultCard" style="display:none">
+      <h3>审核结果 <span id="auditConclusion"></span></h3>
+      <div id="auditResults"></div>
+    </div>
+  </section>
+
+  <!-- 发票清单 -->
+  <section id="tab-list" class="panel">
+    <div class="card">
+      <h3>发票清单 <span class="muted" id="listStats"></span></h3>
+      <div class="row">
+        <div style="flex:0 0 auto"><button class="ghost" id="dedupeBtn" style="margin-top:0">检测重复</button></div>
+        <div style="flex:0 0 auto"><button class="ghost" id="resetListBtn" style="margin-top:0">重置示例</button></div>
+      </div>
+      <p class="muted" id="dupHint"></p>
+      <div id="invoiceList" style="margin-top:10px"></div>
+    </div>
+  </section>
+
+  <!-- 报销组合 -->
+  <section id="tab-combine" class="panel">
+    <div class="card">
+      <h3>按目标金额选择最优发票组合</h3>
+      <div class="row">
+        <div><label>目标金额（元）</label><input type="number" id="combTarget" value="1000" /></div>
+        <div><label>允许误差（元）</label><input type="number" id="combTolerance" value="0" /></div>
+      </div>
+      <button class="primary" id="combineBtn">计算组合</button>
+      <span class="muted">（演示为前端精确枚举；后端为大集合的 meet-in-the-middle 精确解）</span>
+    </div>
+    <div class="card" id="combineResultCard" style="display:none">
+      <h3>组合结果 <span id="combineSummary"></span></h3>
+      <div id="combineResult"></div>
+      <button class="ghost" id="exportCsvBtn">导出 CSV 台账</button>
+    </div>
+  </section>
+
+  <!-- 报销规则 -->
+  <section id="tab-rules" class="panel">
+    <div class="card">
+      <h3>报销规则 <span class="muted" id="ruleStats"></span></h3>
+      <input type="text" id="ruleSearch" placeholder="搜索规则关键词，如：住宿" />
+      <div id="ruleList" style="margin-top:10px"></div>
+    </div>
+  </section>
+
+  <!-- 智能问答 -->
+  <section id="tab-chat" class="panel">
+    <div class="card">
+      <h3>向报销助手提问</h3>
+      <div id="chatLog"></div>
+      <textarea id="chatInput" placeholder="例如：差旅费的住宿标准是什么？"></textarea>
+      <div class="row" style="align-items:center">
+        <div style="flex:0 0 auto"><button class="primary" id="chatBtn" style="margin-top:10px">发送</button></div>
+        <div class="muted">可试：住宿标准 / 报销时效 / 发票要求</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ 演示数据 ============ */
+const CITY_TIER = (() => {
+  const t1 = ["北京", "上海", "广州", "深圳"];
+  const t2 = ["成都","杭州","重庆","武汉","西安","苏州","天津","南京","长沙","郑州","东莞","青岛","沈阳","宁波","昆明"];
+  const m = {};
+  t1.forEach((c) => m[c] = 1);
+  t2.forEach((c) => m[c] = 2);
+  return m;
+})();
+const HOTEL_LIMIT = { 1: 600, 2: 500, 3: 400 };
+function normCity(c){ return (c||"").replace(/(特别行政区|自治区|地区|市|区|县)$/,""); }
+function cityTier(c){ return CITY_TIER[normCity(c)] || 3; }
+function hotelLimit(c){ return HOTEL_LIMIT[cityTier(c)]; }
+
+let SEQ = 0;
+function makeInvoice(code, no, date, amount, buyer, seller, item){
+  SEQ++;
+  return {
+    id: "demo-" + SEQ,
+    fields: {
+      "通用字段": { "发票代码": code, "发票号码": no, "开票日期": date, "金额": (amount/1.06).toFixed(2), "税额": (amount-amount/1.06).toFixed(2), "价税合计": String(amount) },
+      "购买方信息": { "名称": buyer },
+      "销售方信息": { "名称": seller },
+      "商品信息": { "商品名称": item },
+    }
+  };
+}
+function defaultInvoices(){
+  SEQ = 0;
+  return [
+    makeInvoice("011002000411","23876501","2026-10-01",580,"小荷包科技（北京）有限公司","北京雍和酒店管理有限公司","住宿服务"),
+    makeInvoice("031002000411","23876502","2026-09-28",480,"小荷包科技（北京）有限公司","上海静安假日酒店","住宿服务"),
+    makeInvoice("021002000411","23876503","2026-09-27",553.5,"小荷包科技（北京）有限公司","中国铁路12306","铁路旅客运输"),
+    makeInvoice("011002000411","23876504","2026-10-02",100,"小荷包科技（北京）有限公司","北京某餐饮有限公司","餐饮服务"),
+    makeInvoice("011002000411","23876505","2026-09-30",320,"小荷包科技（北京）有限公司","晨光文具旗舰店","办公用品"),
+    makeInvoice("011002000411","23876506","2026-10-03",88,"小荷包科技（北京）有限公司","北京出租车","市内交通"),
+    makeInvoice("011002000411","23876501","2026-10-01",580,"小荷包科技（北京）有限公司","北京雍和酒店管理有限公司","住宿服务"),
+  ];
+}
+
+const RULES = [
+  ["审核制度","适用范围","1.2","适用费用","与公司经营活动直接相关的差旅、业务招待、采购、培训、通讯、加班餐费等可报销。"],
+  ["审核制度","审核原则","2.1","真实性","所有报销须基于真实业务，禁止虚构或拆分发票。"],
+  ["审核制度","审核原则","2.3","时效性","费用发生后 30 天内提交系统，逾期视为自动放弃。"],
+  ["差旅费","事前审批","T1.1","出差申请","出差前须完成《出差申请单》，注明行程、预算、交通等级。"],
+  ["差旅费","交通标准","T3.2","外地市内交通","外地市内交通费按出差自然天数计算，每人每天100元包干使用。"],
+  ["差旅费","住宿标准","T4.1","分城市限额","一线城市：600 元/晚；二线城市：500 元/晚；其余地区统一 400 元/晚。"],
+  ["差旅费","伙食标准","T5.1","一般地区","伙食补助费按出差自然天数计算，每人每天100元。"],
+  ["审核制度","票据规范","4.1","发票要求","须为国家税务局监制的增值税发票，抬头、税号、项目、金额完整。"],
+  ["审核制度","票据规范","4.3","遗失处理","发票遗失须填写《票据遗失说明》，附付款凭证及对方单位盖章确认件。"],
+  ["审核制度","付款时限","7.1","财务审核","财务部 5 个工作日内完成票据合规性及预算余额审核。"],
+  ["审核制度","付款时限","7.2","打款","审核通过后 8 个工作日内网银付款至员工工资卡。"],
+  ["审核制度","违规处理","8.2","重复报销","系统自动校验，人工复核发现重复即冻结账号并通报。"],
+].map(([category, subcategory, clause_id, title, content]) => ({ category, subcategory, clause_id, title, content, rule_id: `${category}_${subcategory}_${clause_id}` }));
+
+let invoices = defaultInvoices();
+
+/* ============ 通用工具 ============ */
+const $ = (id) => document.getElementById(id);
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1800); }
+function amtOf(inv){ const v=(inv.fields["通用字段"]||{})["价税合计"]; const n=parseFloat(String(v).replace(/,/g,"")); return isNaN(n)?null:n; }
+function money(n){ return (Math.round(n*100)/100).toFixed(2); }
+
+document.querySelectorAll("nav button").forEach((btn) => {
+  btn.onclick = () => {
+    document.querySelectorAll("nav button").forEach((b)=>b.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach((p)=>p.classList.remove("active"));
+    btn.classList.add("active");
+    $("tab-"+btn.dataset.tab).classList.add("active");
+    if (btn.dataset.tab==="list") renderList();
+    if (btn.dataset.tab==="rules") renderRules();
+  };
+});
+
+/* ============ 发票识别 ============ */
+$("recognizeBtn").onclick = () => {
+  $("fieldsCard").style.display = "block";
+  $("fieldsLoading").style.display = "block";
+  $("fieldsOut").textContent = "";
+  $("engineTag").textContent = "OCR + LLM 识别中...";
+  const sample = invoices.find((i)=>i.fields["商品信息"]["商品名称"]==="住宿服务") || invoices[0];
+  setTimeout(() => {
+    $("fieldsLoading").style.display = "none";
+    $("engineTag").textContent = "engine: ocr+llm";
+    $("fieldsOut").textContent = JSON.stringify(sample.fields, null, 2);
+    window.__lastFields = sample.fields;
+    toast("识别完成（演示数据）");
+  }, 900);
+};
+$("toAuditBtn").onclick = () => {
+  document.querySelector('nav button[data-tab="audit"]').click();
+};
+
+/* ============ 智能审核 ============ */
+function toDate(s){ const m=/(\d{4})[-/年](\d{1,2})[-/月](\d{1,2})/.exec(s||""); return m? new Date(+m[1], +m[2]-1, +m[3]) : null; }
+$("auditBtn").onclick = () => {
+  const fields = window.__lastFields || invoices[0].fields;
+  const city = $("ctxCity").value, amount = parseFloat($("ctxAmount").value), nights = parseFloat($("ctxNights").value);
+  const results = [];
+  const common = fields["通用字段"] || {};
+  const missing = ["发票号码","开票日期","价税合计"].filter((k)=>!common[k] || common[k]==="无");
+  results.push({ title:"发票要素完整", id:"审核制度_票据规范_4.1", status: missing.length?"fail":"pass",
+    msg: missing.length? "缺少要素："+missing.join("、"): "发票号码、开票日期、价税合计齐全" });
+
+  const d = toDate(common["开票日期"]);
+  if (d){
+    const days = Math.floor((new Date(2026,9,9) - d)/86400000);
+    results.push({ title:"报销时效性", id:"审核制度_审核原则_2.3", status: days<=30?"pass":"fail",
+      msg: `开票日期距今 ${days} 天，`+(days<=30?"在 30 天内":"已超过 30 天时效") });
+  } else {
+    results.push({ title:"报销时效性", id:"审核制度_审核原则_2.3", status:"skip", msg:"无法解析开票日期" });
+  }
+
+  if (city && !isNaN(amount)){
+    const limit = hotelLimit(city);
+    const label = ["","一线城市","二线城市","其余地区"][cityTier(city)];
+    if (nights>0){
+      const per = amount/nights, ok = per<=limit;
+      results.push({ title:"住宿费限额", id:"差旅费_住宿标准_T4.1", status: ok?"pass":"fail",
+        msg:`${city}（${label}）限额 ${limit} 元/晚，实际 ${money(per)} 元/晚（${nights} 晚）` });
+    } else {
+      results.push({ title:"住宿费限额", id:"差旅费_住宿标准_T4.1", status: amount<=limit?"warn":"fail",
+        msg:`${city}（${label}）限额 ${limit} 元/晚，金额 ${money(amount)} 元，未提供晚数` });
+    }
+  } else {
+    results.push({ title:"住宿费限额", id:"差旅费_住宿标准_T4.1", status:"skip", msg:"未提供城市/金额" });
+  }
+
+  const failed = results.filter((r)=>r.status==="fail").length;
+  const warned = results.filter((r)=>r.status==="warn").length;
+  const concl = failed? "不通过" : warned? "需人工复核" : "通过";
+  const cls = concl==="通过"?"pass": concl==="不通过"?"fail":"warn";
+  $("auditResultCard").style.display = "block";
+  $("auditConclusion").innerHTML = `<span class="badge ${cls}">${concl}</span>`;
+  $("auditResults").innerHTML = results.map((r)=>`
+    <div class="rule">
+      <span class="badge ${r.status}">${r.status.toUpperCase()}</span>
+      <b>${r.title}</b> <small>${r.id}</small>
+      <div>${r.msg}</div>
+    </div>`).join("");
+};
+
+/* ============ 发票清单 ============ */
+function renderList(){
+  $("listStats").textContent = `（共 ${invoices.length} 张）`;
+  $("invoiceList").innerHTML = invoices.map((inv)=>{
+    const c = inv.fields["通用字段"]||{}, s = inv.fields["销售方信息"]||{};
+    return `<div class="rule">
+      <b>${c["发票号码"]||"（无号码）"}</b> <small>${c["开票日期"]||""}</small>
+      <span class="badge pill">${c["价税合计"]||"?"} 元</span>
+      <small>${s["名称"]||""}</small>
+      <button data-del="${inv.id}" style="float:right;border:none;background:none;color:#dc2626;cursor:pointer">删除</button>
+    </div>`;
+  }).join("") || "<p class='muted'>暂无发票</p>";
+  document.querySelectorAll("[data-del]").forEach((b)=>{
+    b.onclick = () => { invoices = invoices.filter((i)=>i.id!==b.dataset.del); renderList(); toast("已删除"); };
+  });
+}
+$("resetListBtn").onclick = () => { invoices = defaultInvoices(); renderList(); $("dupHint").textContent=""; toast("示例已重置"); };
+$("dedupeBtn").onclick = () => {
+  const groups = {};
+  invoices.forEach((inv)=>{ const c=inv.fields["通用字段"]||{}; const sig=[c["发票代码"],c["发票号码"],c["价税合计"]].join("|"); (groups[sig]=groups[sig]||[]).push(inv); });
+  const dups = Object.values(groups).filter((g)=>g.length>1);
+  if (!dups.length){ $("dupHint").textContent="未发现重复发票"; return; }
+  $("dupHint").innerHTML = dups.map((g)=>{ const c=g[0].fields["通用字段"]; return `重复 ${g.length} 张：号码 ${c["发票号码"]}，金额 ${c["价税合计"]}`; }).join("<br>");
+};
+
+/* ============ 报销组合（精确枚举） ============ */
+function bestCombo(items, target, tol){
+  const n = items.length;
+  if (n > 22) return null; // 演示规模上限
+  const cents = items.map((x)=>Math.round(x.amount*100));
+  const tgt = Math.round(target*100), t = Math.round(tol*100);
+  let best=null;
+  for (let mask=0; mask<(1<<n); mask++){
+    let sum=0, cnt=0;
+    for (let i=0;i<n;i++) if (mask&(1<<i)){ sum+=cents[i]; cnt++; }
+    const diff = sum - tgt, dist = Math.abs(diff);
+    const out = dist<=t?0:1, extra = out? dist-t: dist;
+    const score = [out, extra, diff<0?1:0, cnt];
+    if (!best || cmp(score,best.score)<0) best = { mask, sum, diff, cnt, score };
+  }
+  return best;
+}
+function cmp(a,b){ for (let i=0;i<a.length;i++){ if (a[i]!==b[i]) return a[i]-b[i]; } return 0; }
+
+$("combineBtn").onclick = () => {
+  const target = parseFloat($("combTarget").value);
+  const tol = parseFloat($("combTolerance").value) || 0;
+  if (!target){ toast("请输入目标金额"); return; }
+  const usable = invoices.map((inv)=>({ inv, amount: amtOf(inv) })).filter((x)=>x.amount!=null);
+  if (!usable.length){ toast("没有可用发票"); return; }
+  if (usable.length > 22){ toast("演示版最多支持 22 张，后端可处理更大规模"); return; }
+  const best = bestCombo(usable, target, tol);
+  const chosen = usable.filter((_,i)=> best.mask & (1<<i)).map((x)=>x.inv);
+
+  $("combineResultCard").style.display = "block";
+  $("combineSummary").innerHTML =
+    `<span class="badge ${best.diff===0?"pass":"warn"}">合计 ${money(best.sum/100)} 元，差 ${money(best.diff/100)} 元，共 ${best.cnt} 张</span>`;
+  $("combineResult").innerHTML = chosen.map((inv)=>{ const c=inv.fields["通用字段"]; return `
+    <div class="rule"><b>${c["发票号码"]}</b> <small>${c["开票日期"]}</small>
+    <span class="badge pill">${c["价税合计"]} 元</span> <small>${inv.fields["销售方信息"]["名称"]}</small></div>`; }).join("") || "<p class='muted'>无可选组合</p>";
+  window.__combo = chosen;
+};
+
+$("exportCsvBtn").onclick = () => {
+  const rows = window.__combo || [];
+  if (!rows.length){ toast("请先计算组合"); return; }
+  const header = ["序号","发票代码","发票号码","开票日期","购买方","销售方","商品名称","价税合计"];
+  const lines = [header.join(",")];
+  let total = 0;
+  rows.forEach((inv,i)=>{
+    const c=inv.fields["通用字段"], s=inv.fields["销售方信息"], g=inv.fields["商品信息"];
+    total += amtOf(inv)||0;
+    lines.push([i+1,c["发票代码"],c["发票号码"],c["开票日期"],inv.fields["购买方信息"]["名称"],s["名称"],g["商品名称"],c["价税合计"]]
+      .map((x)=>`"${String(x).replace(/"/g,'""')}"`).join(","));
+  });
+  lines.push(`"","","","","","","合计",${money(total)}`);
+  const blob = new Blob(["\ufeff"+lines.join("\r\n")], { type:"text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href=url; a.download="报销台账.csv"; a.click();
+  URL.revokeObjectURL(url);
+  toast("已导出 CSV");
+};
+
+/* ============ 报销规则 ============ */
+function renderRules(){
+  const kw = $("ruleSearch").value.trim().toLowerCase();
+  const list = RULES.filter((r)=> !kw || [r.category,r.subcategory,r.title,r.content].join(" ").toLowerCase().includes(kw));
+  $("ruleStats").textContent = `（共 ${list.length} 条）`;
+  $("ruleList").innerHTML = list.map((r)=>`
+    <div class="rule"><b>【${r.category} / ${r.subcategory}】${r.title}</b> <small>${r.clause_id}</small>
+    <div>${r.content}</div></div>`).join("") || "<p class='muted'>无匹配规则</p>";
+}
+$("ruleSearch").oninput = renderRules;
+
+/* ============ 智能问答（演示预设） ============ */
+const ANSWERS = [
+  { k: ["住宿","酒店"], a: "根据《差旅费 / 住宿标准 T4.1》：一线城市 600 元/晚，二线城市 500 元/晚，其余地区 400 元/晚。北京属一线城市，故限额 600 元/晚。" },
+  { k: ["时效","多久","期限","30"], a: "根据《审核制度 / 审核原则 2.3》：费用发生后 30 天内需提交系统，逾期视为自动放弃；差旅费另需返程后五个工作日内办理。" },
+  { k: ["发票","票据","要求"], a: "根据《审核制度 / 票据规范 4.1》：须为国家税务局监制的增值税发票，抬头、税号、项目、金额完整；遗失需填写《票据遗失说明》。" },
+  { k: ["组合","目标金额"], a: "报销组合会在发票清单中枚举子集，优先落在你的容差范围内，其次更接近目标金额。可在「报销组合」页输入目标金额试用。" },
+];
+function answer(q){
+  for (const item of ANSWERS) if (item.k.some((k)=>q.includes(k))) return item.a;
+  return "本演示为前端预设问答。真实系统会接入大模型，并结合你的报销规则库作答（后端 /api/chat/stream）。";
+}
+$("chatBtn").onclick = () => {
+  const q = $("chatInput").value.trim(); if (!q) return;
+  const log = $("chatLog");
+  log.insertAdjacentHTML("beforeend", `<div class="msg user">${q}</div>`);
+  $("chatInput").value = "";
+  const bubble = document.createElement("div"); bubble.className="msg assistant"; log.appendChild(bubble);
+  const text = answer(q); let i=0;
+  const timer = setInterval(()=>{ bubble.textContent = text.slice(0, i+=2); log.scrollTop = log.scrollHeight; if (i>=text.length) clearInterval(timer); }, 18);
+};
+$("chatInput").addEventListener("keydown", (e)=>{ if (e.key==="Enter" && (e.ctrlKey||e.metaKey)) $("chatBtn").click(); });
+
+renderList(); renderRules();
+</script>
+</body>
+</html>

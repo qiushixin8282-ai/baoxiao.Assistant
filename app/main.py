@@ -39,3 +39,7 @@ if settings.web_dir.exists():
     @app.get("/", include_in_schema=False)
     def index() -> FileResponse:
         return FileResponse(settings.web_dir / "index.html")
+
+    @app.get("/demo", include_in_schema=False)
+    def demo() -> FileResponse:
+        return FileResponse(settings.web_dir / "demo.html")
